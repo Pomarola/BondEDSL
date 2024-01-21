@@ -1,11 +1,9 @@
-module Main (main) where
+module Main where
 
 import           Control.Exception              ( catch
                                                 , IOException
                                                 )
 import           Control.Monad.Except
-import           Control.Monad.Trans.Class        (lift)
-import           Control.Monad                    (when)
 import           Data.Char
 import           Data.List
 import           Data.Maybe
@@ -14,18 +12,13 @@ import           System.Console.Haskeline
 import qualified Control.Monad.Catch           as MC
 import           System.Environment
 import           System.IO               hiding ( print )
-import           Text.PrettyPrint.HughesPJ      ( render
-                                                , text
-                                                )
 
 import           Common
--- import           PrettyPrinter
--- import           Simplytyped
 import           Parse
+
 ---------------------
 --- Interpreter
 ---------------------
--- putStrLn (show (stmts_parse "def con = give at 10/10/1990 scale 10.0 one ARS and (one USD or zero)"))
 
 main :: IO ()
 main = runInputT defaultSettings main'
@@ -73,13 +66,13 @@ readevalprint args state@(S inter env) =
         rec state { inter = True } -- state' ver si va
 
 data Command = Compile CompileForm
-              | Print String
-              | Recompile
+              -- | Print String
+              -- | Recompile
               | Browse
               | Quit
               | Help
               | Noop
-              | FindType String
+              -- | FindType String
 
 data CompileForm = CompileInteractive  String
                   | CompileFile         String
@@ -114,16 +107,17 @@ handleCommand state@(S inter env) cmd = case cmd of
   Noop   -> return (Just state)
   Help   -> lift $ putStr (helpTxt commands) >> return (Just state)
   Browse -> lift $ do
-    putStr (unlines [ s | s <- reverse (nub (map fst env)) ])
+    -- putStr (unlines [ s | s <- reverse (nub (map fst env)) ])
+    putStrLn "hola"
     return (Just state)
   Compile c -> do
     state' <- case c of
       CompileInteractive s -> compilePhrase state s
       CompileFile        f -> compileFile state f -- check extension aca
     return (Just state')
-  Print s ->
-    let s' = reverse (dropWhile isSpace (reverse (dropWhile isSpace s)))
-    in  printPhrase s' >> return (Just state)
+  -- Print s ->
+  --   let s' = reverse (dropWhile isSpace (reverse (dropWhile isSpace s)))
+  --   in  printPhrase s' >> return (Just state)
 
 data InteractiveCommand = Cmd [String] String (String -> Command) String
 
@@ -134,7 +128,7 @@ commands =
         "<file>"
         (Compile . CompileFile)
         "Cargar un programa desde un archivo"
-  , Cmd [":print"] "<exp>" Print "Imprime un término y sus ASTs"
+  -- , Cmd [":print"] "<exp>" Print "Imprime un término y sus ASTs"
   , Cmd [":quit"]       ""       (const Quit) "Salir del intérprete"
   , Cmd [":help", ":?"] ""       (const Help) "Mostrar esta lista de comandos"
   ]
@@ -159,8 +153,8 @@ helpTxt cs =
            cs
          )
 
-checkExtension:: String -> Bool
-checkExtension = ".cc" `isSuffixOf` reverse (dropWhile isSpace (reverse s))
+-- checkExtension:: String -> Bool
+-- checkExtension = ".cc" `isSuffixOf` reverse (dropWhile isSpace (reverse s))
 
 compileFiles :: [String] -> State -> InputT IO State
 compileFiles xs s =

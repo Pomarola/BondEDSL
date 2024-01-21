@@ -6,12 +6,12 @@ cabal-version: 2.2
 
 name:           FinanceDSL
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/FinanceDSL#readme>
-homepage:       https://github.com/githubuser/FinanceDSL#readme
-bug-reports:    https://github.com/githubuser/FinanceDSL/issues
-author:         Author name here
+description:    Please see the README on GitHub at <https://github.com/pomarola/FinanceDSL#readme>
+homepage:       https://github.com/pomarola/FinanceDSL#readme
+bug-reports:    https://github.com/pomarola/FinanceDSL/issues
+author:         Lucas Poma
 maintainer:     example@example.com
-copyright:      2024 Author name here
+copyright:      2024 Lucas Poma
 license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
@@ -21,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/FinanceDSL
+  location: https://github.com/pomarola/FinanceDSL
 
 library
   exposed-modules:
@@ -33,14 +33,6 @@ library
       Paths_FinanceDSL
   hs-source-dirs:
       src
-  default-extensions:
-      TupleSections
-      MultiWayIf
-      LambdaCase
-      DataKinds
-      PolyKinds
-      FlexibleInstances
-      FlexibleContexts
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       QuickCheck
@@ -48,10 +40,12 @@ library
     , base >=4.7 && <5
     , containers
     , exceptions
+    , extra
     , haskeline >=0.8.0.0
     , mtl
-    , pretty
-    , transformers
+    , prettyprinter
+    , prettyprinter-ansi-terminal
+    , text
   default-language: Haskell2010
 
 executable FinanceDSL-exe
@@ -62,14 +56,6 @@ executable FinanceDSL-exe
       Paths_FinanceDSL
   hs-source-dirs:
       app
-  default-extensions:
-      TupleSections
-      MultiWayIf
-      LambdaCase
-      DataKinds
-      PolyKinds
-      FlexibleInstances
-      FlexibleContexts
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-tools:
       happy
@@ -80,10 +66,12 @@ executable FinanceDSL-exe
     , base >=4.7 && <5
     , containers
     , exceptions
+    , extra
     , haskeline >=0.8.0.0
     , mtl
-    , pretty
-    , transformers
+    , prettyprinter
+    , prettyprinter-ansi-terminal
+    , text
   default-language: Haskell2010
 
 test-suite FinanceDSL-test
@@ -95,14 +83,6 @@ test-suite FinanceDSL-test
       Paths_FinanceDSL
   hs-source-dirs:
       test
-  default-extensions:
-      TupleSections
-      MultiWayIf
-      LambdaCase
-      DataKinds
-      PolyKinds
-      FlexibleInstances
-      FlexibleContexts
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       FinanceDSL
@@ -111,8 +91,10 @@ test-suite FinanceDSL-test
     , base >=4.7 && <5
     , containers
     , exceptions
+    , extra
     , haskeline >=0.8.0.0
     , mtl
-    , pretty
-    , transformers
+    , prettyprinter
+    , prettyprinter-ansi-terminal
+    , text
   default-language: Haskell2010
