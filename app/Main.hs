@@ -107,7 +107,7 @@ handleCommand state@(S inter env) cmd = case cmd of
   Noop   -> return (Just state)
   Help   -> lift $ putStr (helpTxt commands) >> return (Just state)
   Browse -> lift $ do
-    -- putStr (unlines [ s | s <- reverse (nub (map fst env)) ])
+    putStr (unlines (reverse (nub (map show env))))
     putStrLn "hola"
     return (Just state)
   Compile c -> do
@@ -206,6 +206,12 @@ parseIO f p x = lift $ case p x of
     return Nothing
   Ok r -> return (Just r)
 
--- handle smt deberia solo ponerlos en el estado por ahora
-handleDefOrExp :: State -> Def -> InputT IO State
-handleDefOrExp state def = return (state { env = def : env state })
+handleDefOrExp :: State -> DefOrExp -> InputT IO State
+handleDefOrExp state (Def v c) = do
+  -- c' <- eval c
+  -- return (state { env = (v, c') : env state })
+  return (state { env = (v, c) : env state })
+handleDefOrExp state (Eval exp) = do
+  -- c' <- eval c
+  -- print (show (evalOp op c'))
+  return state

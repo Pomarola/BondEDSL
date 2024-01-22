@@ -30,6 +30,10 @@ import Data.Char
       DOUBLE  { TDouble $$ }
       INT     { TInt $$ }
       CURRENCY { TCurrency $$ }
+      PRINT    { TPrint }
+      TIR      { TTir }
+      YIELD    { TYield }
+      PRICE    { TPrice }
     
 
 %right VAR
@@ -38,6 +42,14 @@ import Data.Char
 %right OR
 
 %%
+
+DefOrExp        : Def                           { $1 }
+                | Exp                           { Eval $1 }
+                
+Exp             : Contract                      { Print $1 }
+                | TIR Contract                  { Tir $2 }
+                | YIELD Contract                { Yield $2 }
+                | PRICE Contract                { Price $2 }
 
 Def             : DEF VAR '=' Contract          { Def $2 $4 }       
 
@@ -103,6 +115,10 @@ data Token = TVar String
                 | TDouble Double
                 | TInt Int
                 | TCurrency Currency
+                | TPrint
+                | TTir
+                | TYield
+                | TPrice
                 | TEOF
                 deriving Show
 
@@ -130,6 +146,10 @@ lexer cont s = case s of
                                 ("scale",rest) -> cont TScale rest
                                 ("and",rest) -> cont TAnd rest
                                 ("or",rest) -> cont TOr rest
+                                ("print",rest) -> cont TPrint rest
+                                ("tir",rest) -> cont TTir rest
+                                ("yield",rest) -> cont TYield rest
+                                ("price",rest) -> cont TPrice rest
                                 ("USD",rest) -> cont (TCurrency USD) rest
                                 ("ARS",rest) -> cont (TCurrency ARS) rest
                                 ("BTC",rest) -> cont (TCurrency BTC) rest

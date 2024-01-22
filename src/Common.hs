@@ -21,20 +21,19 @@ data Date = Date Int Int Int deriving (Eq, Show)
 -- data Env = [(Var, Contract)]
 --     deriving Show
 
--- data DefOrExp = Def Var Contract | Eval Operation Contract
---     deriving Show
+data DefOrExp = Def Var Contract | Eval Exp
+    deriving Show
     
+data Exp = 
+    Print Contract
+    | Tir Contract
+    | Yield Contract
+    | Price Contract
+    deriving Show
 
-
--- data Operation = TIR | Yield | Price
---     deriving Show
-
-type Env = [Def]
+type Env = [(Var, Contract)]
 
 type Var = String
-
-data Def = Def Var Contract
-    deriving Show
 
 data Contract =
     Var Var
