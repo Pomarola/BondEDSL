@@ -9,6 +9,10 @@ data Currency = USD | ARS | EUR | BTC | ETH
 
 data Date = Date Int Int Int deriving (Eq, Show)
 
+data Frequency = Annual | Semestral | Trimestral | Mensual
+    deriving (Eq, Show)
+
+type Yield = Double
 
 -- type Dues = Int
 -- type Amount = Double
@@ -21,19 +25,31 @@ data Date = Date Int Int Int deriving (Eq, Show)
 -- data Env = [(Var, Contract)]
 --     deriving Show
 
-data DefOrExp = Def Var Contract | Eval Exp
+data DefOrExp = Def Var SugarContract | Eval Exp
     deriving Show
     
 data Exp = 
-    Print Contract
-    | Tir Contract
-    | Yield Contract
-    | Price Contract
+    Print SugarContract
+    | Tir SugarContract
+    | Yield SugarContract
+    | Price SugarContract
     deriving Show
 
 type Env = [(Var, Contract)]
 
 type Var = String
+
+data SugarContract = 
+    SVar Var
+    | SZero
+    | SOne Currency
+    | SAnd SugarContract SugarContract
+    | SOr SugarContract SugarContract
+    | SGive SugarContract
+    | SScale Double SugarContract
+    | SAt Date SugarContract
+    | SZcb Double Currency Date
+    deriving Show
 
 data Contract =
     Var Var

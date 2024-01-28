@@ -34,6 +34,7 @@ import Data.Char
       TIR      { TTir }
       YIELD    { TYield }
       PRICE    { TPrice }
+      ZCB      { TZcb }
     
 
 %right VAR
@@ -53,16 +54,17 @@ Exp             : Contract                      { Print $1 }
 
 Def             : DEF VAR '=' Contract          { Def $2 $4 }       
 
-Contract        :: {Contract} 
-                : ZERO                          { Zero }
-                | ONE CURRENCY                  { One $2 }
-                | GIVE Contract                 { Give $2 }
-                | AT Date Contract              { At $2 $3 }
-                | SCALE DOUBLE Contract         { Scale $2 $3 }
-                | Contract AND Contract         { And $1 $3 }
-                | Contract OR Contract          { Or $1 $3 }
+Contract        :: {SugarContract} 
+                : ZERO                          { SZero }
+                | ONE CURRENCY                  { SOne $2 }
+                | GIVE Contract                 { SGive $2 }
+                | AT Date Contract              { SAt $2 $3 }
+                | SCALE DOUBLE Contract         { SScale $2 $3 }
+                | Contract AND Contract         { SAnd $1 $3 }
+                | Contract OR Contract          { SOr $1 $3 }
                 | '(' Contract ')'              { $2 }
-                | VAR                           { Var $1 }
+                | VAR                           { SVar $1 }
+                | ZCB DOUBLE CURRENCY Date      { SZcb $2 $3 $4 }
          
 Date            :: {Date}
                 : INT '/' INT '/' INT           { Date $1 $3 $5 }
@@ -119,6 +121,7 @@ data Token = TVar String
                 | TTir
                 | TYield
                 | TPrice
+                | TZcb
                 | TEOF
                 deriving Show
 
@@ -150,6 +153,7 @@ lexer cont s = case s of
                                 ("tir",rest) -> cont TTir rest
                                 ("yield",rest) -> cont TYield rest
                                 ("price",rest) -> cont TPrice rest
+                                ("zcb",rest) -> cont TZcb rest
                                 ("USD",rest) -> cont (TCurrency USD) rest
                                 ("ARS",rest) -> cont (TCurrency ARS) rest
                                 ("BTC",rest) -> cont (TCurrency BTC) rest

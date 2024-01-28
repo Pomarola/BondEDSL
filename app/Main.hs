@@ -15,6 +15,7 @@ import           System.IO               hiding ( print )
 
 import           Common
 import           Parse
+import           Sugar
 
 ---------------------
 --- Interpreter
@@ -108,7 +109,6 @@ handleCommand state@(S inter env) cmd = case cmd of
   Help   -> lift $ putStr (helpTxt commands) >> return (Just state)
   Browse -> lift $ do
     putStr (unlines (reverse (nub (map show env))))
-    putStrLn "hola"
     return (Just state)
   Compile c -> do
     state' <- case c of
@@ -207,10 +207,16 @@ parseIO f p x = lift $ case p x of
   Ok r -> return (Just r)
 
 handleDefOrExp :: State -> DefOrExp -> InputT IO State
-handleDefOrExp state (Def v c) = do
+handleDefOrExp state@(S _ e) (Def v sc) = do
   -- c' <- eval c
   -- return (state { env = (v, c') : env state })
-  return (state { env = (v, c) : env state })
+  c <- convert e sc
+  case c of
+    Just c' -> return (state { env = (v, c') : env state })
+    Nothing -> do
+      lift $ putStrLn ("No se pudo convertir " ++ v ++ " a contrato.")
+      return state
+
 handleDefOrExp state (Eval exp) = do
   -- c' <- eval c
   -- print (show (evalOp op c'))
