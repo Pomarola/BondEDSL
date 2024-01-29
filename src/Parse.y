@@ -7,7 +7,7 @@ import Data.Char
 }
 
 %monad { P } { thenP } { returnP }
-%name parseDefOrExp Def
+%name parseDefOrExp DefOrExp
 %name parseDefs Defs
 
 %tokentype { Token }
@@ -47,7 +47,8 @@ import Data.Char
 DefOrExp        : Def                           { $1 }
                 | Exp                           { Eval $1 }
                 
-Exp             : Contract                      { Print $1 }
+Exp             :: {Exp}
+                : PRINT Contract                { Print $2 }
                 | TIR Contract                  { Tir $2 }
                 | YIELD Contract                { Yield $2 }
                 | PRICE Contract                { Price $2 }

@@ -16,6 +16,7 @@ import           System.IO               hiding ( print )
 import           Common
 import           Parse
 import           Sugar
+import           Eval
 
 ---------------------
 --- Interpreter
@@ -207,10 +208,10 @@ parseIO f p x = lift $ case p x of
   Ok r -> return (Just r)
 
 handleDefOrExp :: State -> DefOrExp -> InputT IO State
-handleDefOrExp state@(S _ e) (Def v sc) = do
+handleDefOrExp state (Def v sc) = do
   -- c' <- eval c
   -- return (state { env = (v, c') : env state })
-  c <- convert e sc
+  c <- convert (env state) sc
   case c of
     Just c' -> return (state { env = (v, c') : env state })
     Nothing -> do
@@ -218,6 +219,5 @@ handleDefOrExp state@(S _ e) (Def v sc) = do
       return state
 
 handleDefOrExp state (Eval exp) = do
-  -- c' <- eval c
-  -- print (show (evalOp op c'))
+  c <- eval (env state) exp
   return state
