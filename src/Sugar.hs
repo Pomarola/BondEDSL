@@ -4,8 +4,8 @@ import           System.Console.Haskeline
 
 import Common
 
-zcb :: Double -> Currency -> Date -> Contract
-zcb a c d = At d (Scale a (One c))
+zcb :: Scaler -> Currency -> Date -> Contract
+zcb s c d = at d (scale s (one c))
 
 -- argyBond :: Currency -> Date -> Int -> Frequency -> Yield -> Double -> Contract
 
@@ -47,14 +47,14 @@ convert env (SGive c) = do
     case c' of
         Just c'' -> return $ Just (Give c'')
         Nothing -> return $ Nothing
-convert env (SScale a c) = do
+convert env (SScale s c) = do
     c' <- convert env c
     case c' of
-        Just c'' -> return $ Just (Scale a c'')
+        Just c'' -> return $ Just (Scale s c'')
         Nothing -> return $ Nothing
 convert env (SAt d c) = do 
     c' <- convert env c
     case c' of
         Just c'' -> return $ Just (At d c'')
         Nothing -> return $ Nothing
-convert _ (SZcb a c d) = return $ Just (zcb a c d)
+convert _ (SZcb s c d) = return $ Just (zcb s c d)

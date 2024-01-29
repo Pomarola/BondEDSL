@@ -20,15 +20,13 @@ type Yield = Double
 
 -- type Interval = (Date, Date, Int)
 
--- data DefOrExp 
-
--- data Env = [(Var, Contract)]
---     deriving Show
+data Scaler = Mult Double | CER | DolarLinked
+    deriving Show
 
 data DefOrExp = Def Var SugarContract | Eval Exp
     deriving Show
-    
-data Exp = 
+
+data Exp =
     Print SugarContract
     | Tir SugarContract
     | Yield SugarContract
@@ -39,49 +37,49 @@ type Env = [(Var, Contract)]
 
 type Var = String
 
-data SugarContract = 
+data SugarContract =
     SVar Var
     | SZero
     | SOne Currency
     | SAnd SugarContract SugarContract
     | SOr SugarContract SugarContract
     | SGive SugarContract
-    | SScale Double SugarContract
+    | SScale Scaler SugarContract
     | SAt Date SugarContract
-    | SZcb Double Currency Date
+    | SZcb Scaler Currency Date
     deriving Show
 
 data Contract =
     Var Var
-    | Zero 
+    | Zero
     | One Currency
     | And Contract Contract
     | Or Contract Contract
     | Give Contract
-    | Scale Double Contract
+    | Scale Scaler Contract
     | At Date Contract
     deriving Show
-    
+
 zero :: Contract
 zero = Zero
 
-one :: Currency -> Contract 
-one c = One c
+one :: Currency -> Contract
+one = One
 
 and :: Contract -> Contract -> Contract
-and c1 c2 = And c1 c2
+and = And
 
 or :: Contract -> Contract -> Contract
-or c1 c2 = Or c1 c2
+or = Or
 
 give :: Contract -> Contract
-give c = Give c
+give = Give
 
-scale :: Double -> Contract -> Contract
-scale x c = Scale x c
+scale :: Scaler -> Contract -> Contract
+scale = Scale
 
 at :: Date -> Contract -> Contract
-at d c = At d c
+at = At
 
 -- prestamo :: Date -> Currency -> Amount -> Rate -> Contract
 -- prestamo d c a r =  let take = payment d a c
@@ -104,7 +102,7 @@ at d c = At d c
 -- andGive :: Contract -> Contract -> Contract
 -- andGive c1 c2 = and c1 (give c2)
 
-    
+
 -- payment :: Date -> Amount -> Currency -> Contract 
 -- payment d a c = at d (scale a (one c))
 

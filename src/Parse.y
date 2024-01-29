@@ -28,6 +28,8 @@ import Data.Char
       AT      { TAt }
       SCALE   { TScale }
       DOUBLE  { TDouble $$ }
+      CER     { TCer }
+      DL      { TDL }
       INT     { TInt $$ }
       CURRENCY { TCurrency $$ }
       PRINT    { TPrint }
@@ -60,12 +62,17 @@ Contract        :: {SugarContract}
                 | ONE CURRENCY                  { SOne $2 }
                 | GIVE Contract                 { SGive $2 }
                 | AT Date Contract              { SAt $2 $3 }
-                | SCALE DOUBLE Contract         { SScale $2 $3 }
+                | SCALE Scaler Contract         { SScale $2 $3 }
                 | Contract AND Contract         { SAnd $1 $3 }
                 | Contract OR Contract          { SOr $1 $3 }
                 | '(' Contract ')'              { $2 }
                 | VAR                           { SVar $1 }
-                | ZCB DOUBLE CURRENCY Date      { SZcb $2 $3 $4 }
+                | ZCB Scaler CURRENCY Date      { SZcb $2 $3 $4 }
+
+Scaler          :: {Scaler}
+                : DOUBLE                        { Mult $1 }
+                | CER                           { CER }
+                | DL                            { DolarLinked }
          
 Date            :: {Date}
                 : INT '/' INT '/' INT           { Date $1 $3 $5 }
@@ -116,6 +123,8 @@ data Token = TVar String
                 | TAt
                 | TScale
                 | TDouble Double
+                | TCer
+                | TDL
                 | TInt Int
                 | TCurrency Currency
                 | TPrint
@@ -155,6 +164,8 @@ lexer cont s = case s of
                                 ("yield",rest) -> cont TYield rest
                                 ("price",rest) -> cont TPrice rest
                                 ("zcb",rest) -> cont TZcb rest
+                                ("CER",rest) -> cont TCer rest
+                                ("DL",rest) -> cont TDL rest
                                 ("USD",rest) -> cont (TCurrency USD) rest
                                 ("ARS",rest) -> cont (TCurrency ARS) rest
                                 ("BTC",rest) -> cont (TCurrency BTC) rest
