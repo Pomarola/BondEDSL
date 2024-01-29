@@ -3,7 +3,7 @@ module Parse where
 import Common 
 import Data.Maybe
 import Data.Char
-
+import Data.Time.Calendar (Day, fromGregorian)
 }
 
 %monad { P } { thenP } { returnP }
@@ -74,8 +74,8 @@ Scaler          :: {Scaler}
                 | CER                           { CER }
                 | DL                            { DolarLinked }
          
-Date            :: {Date}
-                : INT '/' INT '/' INT           { Date $1 $3 $5 }
+Date            :: {Day}
+                : INT '/' INT '/' INT           { fromGregorian (toInteger $5) $3 $1 }
 
 Defs            : Def Defs                      { $1 : $2 }
                 |                               { [] }

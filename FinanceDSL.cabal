@@ -48,6 +48,7 @@ library
     , prettyprinter
     , prettyprinter-ansi-terminal
     , text
+    , time
   default-language: Haskell2010
 
 executable FinanceDSL-exe
@@ -74,6 +75,7 @@ executable FinanceDSL-exe
     , prettyprinter
     , prettyprinter-ansi-terminal
     , text
+    , time
   default-language: Haskell2010
 
 test-suite FinanceDSL-test
@@ -99,4 +101,5 @@ test-suite FinanceDSL-test
     , prettyprinter
     , prettyprinter-ansi-terminal
     , text
+    , time
   default-language: Haskell2010

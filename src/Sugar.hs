@@ -2,12 +2,14 @@ module Sugar where
 
 import           System.Console.Haskeline
 
+import Data.Time.Calendar (Day)
+
 import Common
 
-zcb :: Scaler -> Currency -> Date -> Contract
+zcb :: Scaler -> Currency -> Day -> Contract
 zcb s c d = at d (scale s (one c))
 
--- argyBond :: Currency -> Date -> Int -> Frequency -> Yield -> Double -> Contract
+-- argyBond :: Currency -> Day -> Int -> Frequency -> Yield -> Double -> Contract
 
 -- loopZcb :: 
 -- loopZcb 
