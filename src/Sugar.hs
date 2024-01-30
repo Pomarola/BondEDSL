@@ -2,12 +2,27 @@ module Sugar where
 
 import           System.Console.Haskeline
 
-import Data.Time.Calendar (Day)
+import Data.Time.Calendar (Day, addGregorianMonthsClip)
+import Prelude hiding (and, repeat)
 
 import Common
 
 zcb :: Scaler -> Currency -> Day -> Contract
 zcb s c d = at d (scale s (one c))
+
+pay :: Scaler -> Currency -> Contract
+pay s c = scale s (one c)
+
+repeat :: Int -> Frequency -> Day -> Contract -> Contract
+repeat 1 _ d c = at d c
+repeat n f d c = at d c `and` repeat (n-1) f (nextDate f d) c
+
+nextDate :: Frequency -> Day -> Day
+nextDate Annual d = addGregorianMonthsClip 12 d
+nextDate SemiAnnual d = addGregorianMonthsClip 6 d
+nextDate Quarterly d = addGregorianMonthsClip 3 d
+nextDate Monthly d = addGregorianMonthsClip 1 d
+
 
 -- argyBond :: Currency -> Day -> Int -> Frequency -> Yield -> Double -> Contract
 
@@ -60,3 +75,9 @@ convert env (SAt d c) = do
         Just c'' -> return $ Just (At d c'')
         Nothing -> return $ Nothing
 convert _ (SZcb s c d) = return $ Just (zcb s c d)
+convert _ (SPay s c) = return $ Just (pay s c)
+convert env (SRepeat n f d c) = do
+    c' <- convert env c
+    case c' of
+        Just c'' -> return $ Just (repeat n f d c'')
+        Nothing -> return $ Nothing

@@ -9,7 +9,7 @@ data Currency = USD | ARS | EUR | BTC | ETH
 
 -- data Day = Day Int Int Int deriving (Eq, Show)
 
-data Frequency = Annual | Semestral | Trimestral | Mensual
+data Frequency = Annual | SemiAnnual | Quarterly | Monthly
     deriving (Eq, Show)
 
 type Yield = Double
@@ -47,6 +47,8 @@ data SugarContract =
     | SScale Scaler SugarContract
     | SAt Day SugarContract
     | SZcb Scaler Currency Day
+    | SPay Scaler Currency
+    | SRepeat Int Frequency Day SugarContract
     deriving Show
 
 data Contract =

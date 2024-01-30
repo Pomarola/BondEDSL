@@ -37,6 +37,9 @@ import Data.Time.Calendar (Day, fromGregorian)
       YIELD    { TYield }
       PRICE    { TPrice }
       ZCB      { TZcb }
+      REPEAT   { TRepeat }
+      PAY      { TPay }
+      FREQ     { TFreq $$ }
     
 
 %right VAR
@@ -68,6 +71,8 @@ Contract        :: {SugarContract}
                 | '(' Contract ')'              { $2 }
                 | VAR                           { SVar $1 }
                 | ZCB Scaler CURRENCY Date      { SZcb $2 $3 $4 }
+                | PAY Scaler CURRENCY           { SPay $2 $3}
+                | REPEAT INT FREQ Date Contract { SRepeat $2 $3 $4 $5 }
 
 Scaler          :: {Scaler}
                 : DOUBLE                        { Mult $1 }
@@ -132,6 +137,9 @@ data Token = TVar String
                 | TYield
                 | TPrice
                 | TZcb
+                | TPay
+                | TRepeat
+                | TFreq Frequency
                 | TEOF
                 deriving Show
 
@@ -164,12 +172,18 @@ lexer cont s = case s of
                                 ("yield",rest) -> cont TYield rest
                                 ("price",rest) -> cont TPrice rest
                                 ("zcb",rest) -> cont TZcb rest
+                                ("pay",rest) -> cont TPay rest
+                                ("repeat",rest) -> cont TRepeat rest
                                 ("CER",rest) -> cont TCer rest
                                 ("DL",rest) -> cont TDL rest
                                 ("USD",rest) -> cont (TCurrency USD) rest
                                 ("ARS",rest) -> cont (TCurrency ARS) rest
                                 ("BTC",rest) -> cont (TCurrency BTC) rest
                                 ("ETH",rest) -> cont (TCurrency ETH) rest
+                                ("ANNUAL",rest) -> cont (TFreq Annual) rest
+                                ("SEMIANNUAL",rest) -> cont (TFreq SemiAnnual) rest
+                                ("QUARTERLY",rest) -> cont (TFreq Quarterly) rest
+                                ("MONTHLY",rest) -> cont (TFreq Monthly) rest
                                 (var,rest)   -> cont (TVar var) rest 
                         lexNum cs = let (num,rest) = span isDigit cs 
                                 in case rest of
