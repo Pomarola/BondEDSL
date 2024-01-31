@@ -81,3 +81,15 @@ convert env (SRepeat n f d c) = do
     case c' of
         Just c'' -> return $ Just (repeat n f d c'')
         Nothing -> return $ Nothing
+
+replaceScaler :: Contract -> Scaler -> Double -> Contract
+replaceScaler Zero _ _ = Zero
+replaceScaler (One c) _ _ = One c
+replaceScaler (Give c) s a = Give (replaceScaler c s a)
+replaceScaler (And c1 c2) s a = And (replaceScaler c1 s a) (replaceScaler c2 s a)
+replaceScaler (Or c1 c2) s a = Or (replaceScaler c1 s a) (replaceScaler c2 s a)
+replaceScaler (Scale s' c) s a | s' == s = Scale (Mult a) (replaceScaler c s a)
+                               | otherwise = Scale s' (replaceScaler c s a)
+replaceScaler (At d c) s a = At d (replaceScaler c s a)
+
+-- supose DL 10.0 

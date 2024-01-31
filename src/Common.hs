@@ -21,7 +21,7 @@ type Yield = Double
 -- type Interval = (Day, Day, Int)
 
 data Scaler = Mult Double | CER | DolarLinked
-    deriving Show
+    deriving (Eq, Show)
 
 data DefOrExp = Def Var SugarContract | Eval Exp
     deriving Show
@@ -52,8 +52,7 @@ data SugarContract =
     deriving Show
 
 data Contract =
-    Var Var
-    | Zero
+    Zero
     | One Currency
     | And Contract Contract
     | Or Contract Contract
