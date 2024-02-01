@@ -59,11 +59,6 @@ convert env (SOr c1 c2) = do
                 Just c2'' -> return $ Just (Or c1'' c2'')
                 Nothing -> return $ Nothing
         Nothing -> return $ Nothing
-convert env (SGive c) = do
-    c' <- convert env c
-    case c' of
-        Just c'' -> return $ Just (Give c'')
-        Nothing -> return $ Nothing
 convert env (SScale s c) = do
     c' <- convert env c
     case c' of
@@ -85,7 +80,6 @@ convert env (SRepeat n f d c) = do
 replaceScaler :: Contract -> Scaler -> Double -> Contract
 replaceScaler Zero _ _ = Zero
 replaceScaler (One c) _ _ = One c
-replaceScaler (Give c) s a = Give (replaceScaler c s a)
 replaceScaler (And c1 c2) s a = And (replaceScaler c1 s a) (replaceScaler c2 s a)
 replaceScaler (Or c1 c2) s a = Or (replaceScaler c1 s a) (replaceScaler c2 s a)
 replaceScaler (Scale s' c) s a | s' == s = Scale (Mult a) (replaceScaler c s a)

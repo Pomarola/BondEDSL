@@ -24,7 +24,6 @@ import Data.Time.Calendar (Day, fromGregorian)
       AND     { TAnd }
       OR      { TOr }
       ONE     { TOne }
-      GIVE    { TGive }
       AT      { TAt }
       SCALE   { TScale }
       DOUBLE  { TDouble $$ }
@@ -40,6 +39,11 @@ import Data.Time.Calendar (Day, fromGregorian)
       REPEAT   { TRepeat }
       PAY      { TPay }
       FREQ     { TFreq $$ }
+      SUPPOSE  { TSuppose }
+      BCRACER  { TBcraCer }
+      BCRATC   { TBcraTc }
+      CURRENT  { TCurrent }
+      DATE     { TDate }
     
 
 %right VAR
@@ -49,42 +53,55 @@ import Data.Time.Calendar (Day, fromGregorian)
 
 %%
 
-DefOrExp        : Def                           { $1 }
-                | Exp                           { Eval $1 }
+DefOrExp        : Def                                           { $1 }
+                | Exp                                           { Eval $1 }
+
+Defs            : Def Defs                                      { $1 : $2 }
+                |                                               { [] }
                 
 Exp             :: {Exp}
-                : PRINT Contract                { Print $2 }
-                | TIR Contract                  { Tir $2 }
-                | YIELD Contract                { Yield $2 }
-                | PRICE Contract                { Price $2 }
+                : PRINT CondContract                            { Print $2 }
+                | TIR CondContract                              { Tir $2 }
+                | YIELD CondContract                            { Yield $2 }
+                | PRICE CondContract                            { Price $2 }
 
-Def             : DEF VAR '=' Contract          { Def $2 $4 }       
+CondContract    :: {CondContract}
+                : Contract                                      { SC $1 }
+                | SUPPOSE Cond Contract                         { CC $3 $2 }
 
-Contract        :: {SugarContract} 
-                : ZERO                          { SZero }
-                | ONE CURRENCY                  { SOne $2 }
-                | GIVE Contract                 { SGive $2 }
-                | AT Date Contract              { SAt $2 $3 }
-                | SCALE Scaler Contract         { SScale $2 $3 }
-                | Contract AND Contract         { SAnd $1 $3 }
-                | Contract OR Contract          { SOr $1 $3 }
-                | '(' Contract ')'              { $2 }
-                | VAR                           { SVar $1 }
-                | ZCB Scaler CURRENCY Date      { SZcb $2 $3 $4 }
-                | PAY Scaler CURRENCY           { SPay $2 $3}
-                | REPEAT INT FREQ Date Contract { SRepeat $2 $3 $4 $5 }
+Def             : DEF VAR '=' Contract                          { Def $2 $4 }       
+
+Contract        :: {SugarContract}
+                : AT Date ClosedContract                        { SAt $2 $3 }
+                | Contract AND Contract                         { SAnd $1 $3 }
+                | Contract OR Contract                          { SOr $1 $3 }
+                | ZCB Scaler CURRENCY Date                      { SZcb $2 $3 $4 }
+                | REPEAT INT FREQ Date Contract                 { SRepeat $2 $3 $4 $5 }
+                | VAR                                           { SVar $1 }
+
+ClosedContract  :: {SugarContract} 
+                : ZERO                                          { SZero }
+                | ONE CURRENCY                                  { SOne $2 }
+                | SCALE Scaler ClosedContract                   { SScale $2 $3 }
+                | ClosedContract AND ClosedContract             { SAnd $1 $3 }
+                | ClosedContract OR ClosedContract              { SOr $1 $3 }
+                | '(' ClosedContract ')'                        { $2 }
+                | PAY Scaler CURRENCY                           { SPay $2 $3}
+
+Cond            :: {Cond}
+                : BCRACER DOUBLE                                { BCCER $2 }
+                | BCRATC DOUBLE                                 { BCTC $2 }
+                | CURRENT DOUBLE                                { CV $2 }
+                | DATE Date                                     { Date $2 }
 
 Scaler          :: {Scaler}
-                : DOUBLE                        { Mult $1 }
-                | CER                           { CER }
-                | DL                            { DolarLinked }
+                : DOUBLE                                        { Mult $1 }
+                | CER DOUBLE                                    { CER $2 }
+                | DL DOUBLE                                     { DolarLinked $2 }
          
 Date            :: {Day}
-                : INT '/' INT '/' INT           { fromGregorian (toInteger $5) $3 $1 }
+                : INT '/' INT '/' INT                           { fromGregorian (toInteger $5) $3 $1 }
 
-Defs            : Def Defs                      { $1 : $2 }
-                |                               { [] }
-     
 {
 
 data ParseResult a = Ok a | Failed String
@@ -124,7 +141,6 @@ data Token = TVar String
                 | TAnd
                 | TOr
                 | TOne
-                | TGive
                 | TAt
                 | TScale
                 | TDouble Double
@@ -140,6 +156,11 @@ data Token = TVar String
                 | TPay
                 | TRepeat
                 | TFreq Frequency
+                | TSuppose
+                | TBcraCer
+                | TBcraTc
+                | TCurrent
+                | TDate
                 | TEOF
                 deriving Show
 
@@ -162,7 +183,6 @@ lexer cont s = case s of
                                 ("def",rest) -> cont TDef rest
                                 ("zero",rest) -> cont TZero rest
                                 ("one",rest) -> cont TOne rest
-                                ("give",rest) -> cont TGive rest
                                 ("at",rest) -> cont TAt rest
                                 ("scale",rest) -> cont TScale rest
                                 ("and",rest) -> cont TAnd rest
@@ -174,6 +194,7 @@ lexer cont s = case s of
                                 ("zcb",rest) -> cont TZcb rest
                                 ("pay",rest) -> cont TPay rest
                                 ("repeat",rest) -> cont TRepeat rest
+                                ("suppose",rest) -> cont TSuppose rest
                                 ("CER",rest) -> cont TCer rest
                                 ("DL",rest) -> cont TDL rest
                                 ("USD",rest) -> cont (TCurrency USD) rest
@@ -184,6 +205,10 @@ lexer cont s = case s of
                                 ("SEMIANNUAL",rest) -> cont (TFreq SemiAnnual) rest
                                 ("QUARTERLY",rest) -> cont (TFreq Quarterly) rest
                                 ("MONTHLY",rest) -> cont (TFreq Monthly) rest
+                                ("BCRA-TC",rest) -> cont TBcraTc rest
+                                ("BCRA-CER",rest) -> cont TBcraCer rest
+                                ("CURRENT",rest) -> cont TCurrent rest
+                                ("DATE",rest) -> cont TDate rest
                                 (var,rest)   -> cont (TVar var) rest 
                         lexNum cs = let (num,rest) = span isDigit cs 
                                 in case rest of

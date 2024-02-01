@@ -2,40 +2,34 @@ module Common where
 
 import Prelude hiding (and)
 import Data.Time.Calendar (Day)
--- import Data.Days
 
-data Currency = USD | ARS | EUR | BTC | ETH
+type Var = String
+type Env = [(Var, Contract)]
+
+data Currency = USD | ARS | EUR | BTC | ETH -- por ahi deberia hacer un tipe check para que no se puedan sumar cosas de distintas monedas
     deriving (Eq, Show)
-
--- data Day = Day Int Int Int deriving (Eq, Show)
 
 data Frequency = Annual | SemiAnnual | Quarterly | Monthly
     deriving (Eq, Show)
 
-type Yield = Double
+data Scaler = Mult Double | CER Double | DolarLinked Double
+    deriving Show
 
--- type Dues = Int
--- type Amount = Double
--- type Rate = Double
-
--- type Interval = (Day, Day, Int)
-
-data Scaler = Mult Double | CER | DolarLinked
-    deriving (Eq, Show)
+data Cond = BCCER Double | BCTC Double | Date Day | CV Double                -- CV seria current value, date el dia que queremos sup, bccer cer acutal y bctc tipocambio actual
+    deriving Show
 
 data DefOrExp = Def Var SugarContract | Eval Exp
     deriving Show
 
 data Exp =
-    Print SugarContract
-    | Tir SugarContract
-    | Yield SugarContract
-    | Price SugarContract
+    Print CondContract
+    | Tir CondContract
+    | Yield CondContract
+    | Price CondContract
     deriving Show
 
-type Env = [(Var, Contract)]
-
-type Var = String
+data CondContract = CC Cond SugarContract | SC SugarContract
+    deriving Show
 
 data SugarContract =
     SVar Var
@@ -43,7 +37,6 @@ data SugarContract =
     | SOne Currency
     | SAnd SugarContract SugarContract
     | SOr SugarContract SugarContract
-    | SGive SugarContract
     | SScale Scaler SugarContract
     | SAt Day SugarContract
     | SZcb Scaler Currency Day
@@ -56,7 +49,6 @@ data Contract =
     | One Currency
     | And Contract Contract
     | Or Contract Contract
-    | Give Contract
     | Scale Scaler Contract
     | At Day Contract
     deriving Show
@@ -73,51 +65,8 @@ and = And
 or :: Contract -> Contract -> Contract
 or = Or
 
-give :: Contract -> Contract
-give = Give
-
 scale :: Scaler -> Contract -> Contract
 scale = Scale
 
 at :: Day -> Contract -> Contract
 at = At
-
--- prestamo :: Day -> Currency -> Amount -> Rate -> Contract
--- prestamo d c a r =  let take = payment d a c
---                         give = payment d (a * r) c
---                   in take `andGive` give
-
-
--- `and ` zcb (Day "1200GMT 10 Dec 2020") 20 GBP 
--- `and ` zcb (Day "1200GMT 10 May 2021") 20 GBP 
--- `and ` zcb (Day "1200GMT 10 Dec 2021") 1020 GBP
--- `and ` give (zcb (Day "1200GMT 1Apr 2020") 1000 GBP))
-
--- al30 :: Contract
--- al30 = payment (mkDay "10 Dec 2020") 20 GBP `and` 
-
--- couponBond :: Day -> Day -> Dues -> Double -> Currency -> Contract
-
--- mkDay :: String -> Day 
-
--- andGive :: Contract -> Contract -> Contract
--- andGive c1 c2 = and c1 (give c2)
-
-
--- payment :: Day -> Amount -> Currency -> Contract 
--- payment d a c = at d (scale a (one c))
-
--- instance Num a => Num (Obs a) where
---    fromInteger i = konst (fromInteger i)
---    (+) = liftA2 (+)
---    (-) = liftA2 (-)
---    (*) = liftA2 (*)
---    abs = fmap abs
---    signum = fmap signum
-
--- (%<), (%<=), (%=), (%>=), (%>) :: Ord a => Obs a -> Obs a -> Obs Bool
--- (%<)  = liftA2 (<)
--- (%<=) = liftA2 (<=)
--- (%=)  = liftA2 (==)
--- (%>=) = liftA2 (>=)
--- (%>)  = liftA2 (>)
