@@ -31,7 +31,7 @@ main' = do
   readevalprint args (S True [])
 
 iname, iprompt :: String
-iname = "Contract Calculator"
+iname = "Bond Calculator"
 iprompt = "CC> "
 
 ioExceptionCatcher :: IOException -> IO (Maybe a)

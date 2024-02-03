@@ -7,13 +7,13 @@ import Prelude hiding (and, repeat)
 
 import Common
 
-zcb :: Scaler -> Currency -> Day -> Contract
+zcb :: Scaler -> Currency -> Day -> Bond
 zcb s c d = at d (scale s (one c))
 
-pay :: Scaler -> Currency -> Contract
+pay :: Scaler -> Currency -> Bond
 pay s c = scale s (one c)
 
-repeat :: Int -> Frequency -> Day -> Contract -> Contract
+repeat :: Int -> Frequency -> Day -> Bond -> Bond
 repeat 1 _ d c = at d c
 repeat n f d c = at d c `and` repeat (n-1) f (nextDate f d) c
 
@@ -24,19 +24,19 @@ nextDate Quarterly d = addGregorianMonthsClip 3 d
 nextDate Monthly d = addGregorianMonthsClip 1 d
 
 
--- argyBond :: Currency -> Day -> Int -> Frequency -> Yield -> Double -> Contract
+-- argyBond :: Currency -> Day -> Int -> Frequency -> Yield -> Double -> Bond
 
 -- loopZcb :: 
 -- loopZcb 
 
 -- many para hacer que dado una cantidad haga todos los ands. aunque no se si tiene mucho sentido por las fechas. por ahi darle una periodicidad a fechas.
 
-findContract :: Env -> Var -> Maybe Contract
-findContract [] _ = Nothing
-findContract ((v,c):xs) v' = if v == v' then Just c else findContract xs v'
+findBond :: Env -> Var -> Maybe Bond
+findBond [] _ = Nothing
+findBond ((v,c):xs) v' = if v == v' then Just c else findBond xs v'
 
-convert :: Env -> SugarContract -> InputT IO (Maybe Contract)
-convert env (SVar v) = case findContract env v of
+convert :: Env -> SugarBond -> InputT IO (Maybe Bond)
+convert env (SVar v) = case findBond env v of
     Just c -> return $ Just c
     Nothing -> return $ Nothing
 convert _ SZero = return $ Just Zero
@@ -77,7 +77,7 @@ convert env (SRepeat n f d c) = do
         Just c'' -> return $ Just (repeat n f d c'')
         Nothing -> return $ Nothing
 
-replaceScaler :: Contract -> Scaler -> Double -> Contract
+replaceScaler :: Bond -> Scaler -> Double -> Bond
 replaceScaler Zero _ _ = Zero
 replaceScaler (One c) _ _ = One c
 replaceScaler (And c1 c2) s a = And (replaceScaler c1 s a) (replaceScaler c2 s a)
