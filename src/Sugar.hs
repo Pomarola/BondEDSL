@@ -13,15 +13,15 @@ import Common
 -- pay :: Scaler -> Currency -> Bond
 -- pay s c = scale s (one c)
 
--- repeat :: Int -> Frequency -> Day -> Bond -> Bond
--- repeat 1 _ d c = at d c
--- repeat n f d c = at d c `and` repeat (n-1) f (nextDate f d) c
+repeat :: Int -> Frequency -> Day -> Payment -> Bond
+repeat 1 _ d p = at d p
+repeat n f d p = at d p `and` repeat (n-1) f (nextDate f d) p
 
--- nextDate :: Frequency -> Day -> Day
--- nextDate Annual d = addGregorianMonthsClip 12 d
--- nextDate SemiAnnual d = addGregorianMonthsClip 6 d
--- nextDate Quarterly d = addGregorianMonthsClip 3 d
--- nextDate Monthly d = addGregorianMonthsClip 1 d
+nextDate :: Frequency -> Day -> Day
+nextDate Annual d = addGregorianMonthsClip 12 d
+nextDate SemiAnnual d = addGregorianMonthsClip 6 d
+nextDate Quarterly d = addGregorianMonthsClip 3 d
+nextDate Monthly d = addGregorianMonthsClip 1 d
 
 
 -- argyBond :: Currency -> Day -> Int -> Frequency -> Yield -> Double -> Bond
@@ -61,6 +61,7 @@ convert env (SScale s b) = do
         Just b'' -> return $ Just (Scale s b'')
         Nothing -> return $ Nothing
 convert _ (SAt d p) = return $ Just (At d p)
+convert _ (SRepeat n f d p) = return $ Just (repeat n f d p)
 -- convert _ (SZcb s c d) = return $ Just (zcb s c d)
 -- convert _ (SPay s c) = return $ Just (pay s c)
 -- convert env (SRepeat n f d c) = do

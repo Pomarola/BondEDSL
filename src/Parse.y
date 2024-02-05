@@ -44,6 +44,9 @@ import Data.Time.Calendar (Day, fromGregorian)
         INT             { TInt $$ }
         CER             { TCer }
         DL              { TDl }
+        REPEAT          { TRepeat }
+        FREQ            { TFreq $$ }
+
     
 %right VAR
 %left '=' 
@@ -84,6 +87,7 @@ Bond            :: {SugarBond}
                 | AT Date Payment                               { SAt $2 $3 }
                 | VAR                                           { SVar $1 }
                 | SCALE Scaler Bond                             { SScale $2 $3 }
+                | REPEAT INT FREQ Date Payment                  { SRepeat $2 $3 $4 $5 }
 
 Payment         :: {Payment}
                 : SCALE Scaler Payment                          { PScale $2 $3 }
@@ -162,6 +166,8 @@ data Token = TEquals
                 | TInt Int
                 | TCer
                 | TDl
+                | TRepeat
+                | TFreq Frequency
                 | TEOF
                 deriving Show
 
@@ -186,6 +192,7 @@ lexer cont s = case s of
                 where   
                         lexVar cs = case (span isAlpha cs) of
                                 ("def",rest) -> cont TDef rest
+                                ("repeat",rest) -> cont TRepeat rest
                                 ("print",rest) -> cont TPrint rest
                                 ("tir",rest) -> cont TTir rest
                                 ("yield",rest) -> cont TYield rest
@@ -207,6 +214,10 @@ lexer cont s = case s of
                                 ("ARS",rest) -> cont (TCurrency ARS) rest
                                 ("BTC",rest) -> cont (TCurrency BTC) rest
                                 ("ETH",rest) -> cont (TCurrency ETH) rest
+                                ("ANNUAL",rest) -> cont (TFreq Annual) rest
+                                ("SEMIANNUAL",rest) -> cont (TFreq SemiAnnual) rest
+                                ("QUARTERLY",rest) -> cont (TFreq Quarterly) rest
+                                ("MONTHLY",rest) -> cont (TFreq Monthly) rest
                                 (var,rest)   -> cont (TVar var) rest 
                         lexNum cs = let (num,rest) = span isDigit cs 
                                 in case rest of

@@ -42,9 +42,7 @@ data SugarBond =
     -- | SPlus SugarBond SugarBond
     | SScale Scaler SugarBond
     | SAt Day Payment
-    -- | SZcb Scaler Currency Day
-    -- | SPay Scaler Currency
-    -- | SRepeat Int Frequency Day SugarBond
+    | SRepeat Int Frequency Day Payment
     deriving Show
 
 data Bond =
