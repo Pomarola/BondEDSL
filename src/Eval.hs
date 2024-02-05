@@ -15,11 +15,11 @@ import           Control.Monad.Except
 --     Price -> price c
 
 eval :: Env -> Exp -> InputT IO (Maybe a)
-eval env (Print c) = do
-    c' <- convert env c
-    case c' of
-        Just c'' -> do 
-            lift $ print c''
+eval env (Print (conds, bond)) = do
+    b <- convertCond env conds bond
+    case b of
+        Just b' -> do 
+            lift $ print b'
             return $ Nothing
         Nothing -> return $ Nothing
 eval _ _ = return $ Nothing

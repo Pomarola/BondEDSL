@@ -7,7 +7,7 @@ import           Control.Monad.Except
 import           Data.Char
 import           Data.List
 import           Data.Maybe
-import           Prelude                 hiding ( print )
+import           Prelude                 hiding ( print, exp )
 import           System.Console.Haskeline
 import qualified Control.Monad.Catch           as MC
 import           System.Environment
@@ -215,7 +215,7 @@ handleDefOrExp state (Def v sc) = do
   case c of
     Just c' -> return (state { env = (v, c') : env state })
     Nothing -> do
-      lift $ putStrLn ("No se pudo convertir " ++ v ++ " a contrato.")
+      lift $ putStrLn ("No se pudo convertir " ++ v ++ " a bono.")
       return state
 
 handleDefOrExp state (Eval exp) = do

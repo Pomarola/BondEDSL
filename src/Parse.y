@@ -19,6 +19,7 @@ import Data.Time.Calendar (Day, fromGregorian)
         ')'             { TClose }
         '['             { TListOpen }
         ']'             { TListClose }
+        '/'             { TSlash }
         ','             { TComma }
         '&'             { TAnd }
         DEF             { TDef }    
@@ -67,7 +68,8 @@ CondBond        :: {CondBond}
 
 Def             : DEF VAR '=' Bond                              { Def $2 $4 }       
 
-Conds           : Cond ',' Conds                                { $1 : $2 }
+Conds           : Cond ',' Conds                                { $1 : $3 }
+                | Cond                                          { [$1] }
                 |                                               { [] }
 
 Cond            :: {Cond}
@@ -75,7 +77,6 @@ Cond            :: {Cond}
                 | BCRATC DOUBLE                                 { BCTC $2 }
                 | CURRENT DOUBLE                                { CV $2 }
                 | DATE Date                                     { Date $2 }
-                | VN DOUBLE                                     { VN $2 }
                 | VN INT                                        { VN $2 }
 
 Bond            :: {SugarBond}
@@ -136,6 +137,7 @@ data Token = TEquals
                 | TClose
                 | TListOpen
                 | TListClose
+                | TSlash
                 | TComma
                 | TAnd
                 | TDef
@@ -155,7 +157,7 @@ data Token = TEquals
                 | TRent
                 | TAmort
                 | TZero
-                | TCurrency String
+                | TCurrency Currency
                 | TDouble Double
                 | TInt Int
                 | TCer
@@ -176,6 +178,7 @@ lexer cont s = case s of
                 (')':cs) -> cont TClose cs
                 ('[':cs) -> cont TListOpen cs
                 (']':cs) -> cont TListClose cs
+                ('/':cs) -> cont TSlash cs
                 (',':cs) -> cont TComma cs
                 ('&':cs) -> cont TAnd cs
                 unknown -> \line -> Failed $ 
@@ -195,8 +198,8 @@ lexer cont s = case s of
                                 ("VN",rest) -> cont TVn rest
                                 ("at",rest) -> cont TAt rest
                                 ("scale",rest) -> cont TScale rest
-                                ("R",rest) -> cont TRent rest
-                                ("A",rest) -> cont TAmort rest
+                                ("rent",rest) -> cont TRent rest
+                                ("amort",rest) -> cont TAmort rest
                                 ("zero",rest) -> cont TZero rest
                                 ("CER",rest) -> cont TCer rest
                                 ("DL",rest) -> cont TDl rest

@@ -15,7 +15,7 @@ data Frequency = Annual | SemiAnnual | Quarterly | Monthly
 data Scaler = Mult Double | CER Double | DolarLinked Double
     deriving Show
 
-data Cond = BCCER Double | BCTC Double | Date Day | CV Double | VN Double               -- CV seria current value, date el dia que queremos sup, bccer cer acutal y bctc tipocambio actual
+data Cond = BCCER Double | BCTC Double | Date Day | CV Double | VN Int               -- CV seria current value, date el dia que queremos sup, bccer cer acutal y bctc tipocambio actual
     deriving Show
 
 data DefOrExp = Def Var SugarBond | Eval Exp
@@ -28,7 +28,7 @@ data Exp =
     | Price CondBond
     deriving Show
 
-type CondBond = (Cond, Bond)
+type CondBond = ([Cond], SugarBond)
     
 type Money = (Double, Currency)
 

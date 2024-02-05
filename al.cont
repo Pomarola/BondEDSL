@@ -1,8 +1,3 @@
-def cl = one USD
-def nose = at 10/12/2010 at 10/10/2012 scale 20.0 one ARS
-def a = nose
-def z = zcb 200.0 ARS 31/10/2000
-def x = scale CER z
-def y = x 
-def b = sd
-def zss = zcb 200.0 ARS 11/15/2000
+def nose = at 10/12/2010 scale 20.0 rent 10.0 ARS amort 20.0 ARS
+def nos = at 10/12/2011 scale 20.0 rent 10.0 ARS amort 20.0 ARS
+def no = nose & nos
