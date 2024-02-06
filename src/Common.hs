@@ -4,7 +4,6 @@ import Prelude hiding (and)
 import Data.Time.Calendar (Day)
 
 type Var = String
-type Env = [(Var, Bond)]
 
 data Currency = USD | ARS | EUR | BTC | ETH | None-- por ahi deberia hacer un tipe check para que no se puedan sumar cosas de distintas monedas
     deriving (Eq, Show)
@@ -29,17 +28,15 @@ data Exp =
     deriving Show
 
 type CondBond = ([Cond], SugarBond)
-    
+
 type Money = (Double, Currency)
 
-data Payment = PZero | PScale Scaler Payment | Pay Money Money
+data Payment = PZero | Pay Money Money
     deriving Show
 
 data SugarBond =
     SVar Var
     | SAnd SugarBond SugarBond
-    -- | SOr SugarBond SugarBond
-    -- | SPlus SugarBond SugarBond
     | SScale Scaler SugarBond
     | SAt Day Payment
     | SRepeat Int Frequency Day Payment
@@ -47,16 +44,12 @@ data SugarBond =
 
 data Bond =
     And Bond Bond
-    -- | Or Bond Bond
     | Scale Scaler Bond
     | At Day Payment
     deriving Show
 
 and :: Bond -> Bond -> Bond
 and = And
-
--- or :: Bond -> Bond -> Bond
--- or = Or
 
 scale :: Scaler -> Bond -> Bond
 scale = Scale

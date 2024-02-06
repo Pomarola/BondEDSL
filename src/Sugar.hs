@@ -6,12 +6,7 @@ import Data.Time.Calendar (Day, addGregorianMonthsClip)
 import Prelude hiding (and, repeat)
 
 import Common
-
--- zcb :: Scaler -> Currency -> Day -> Bond
--- zcb s c d = at d (scale s (one c))
-
--- pay :: Scaler -> Currency -> Bond
--- pay s c = scale s (one c)
+import Env
 
 repeat :: Int -> Frequency -> Day -> Payment -> Bond
 repeat 1 _ d p = at d p
@@ -23,24 +18,6 @@ nextDate SemiAnnual d = addGregorianMonthsClip 6 d
 nextDate Quarterly d = addGregorianMonthsClip 3 d
 nextDate Monthly d = addGregorianMonthsClip 1 d
 
-
--- argyBond :: Currency -> Day -> Int -> Frequency -> Yield -> Double -> Bond
-
--- loopZcb :: 
--- loopZcb 
-
--- many para hacer que dado una cantidad haga todos los ands. aunque no se si tiene mucho sentido por las fechas. por ahi darle una periodicidad a fechas.
-
-findBond :: Env -> Var -> Maybe Bond
-findBond [] _ = Nothing
-findBond ((v,c):xs) v' = if v == v' then Just c else findBond xs v'
-
-convertCond :: Env -> [Cond] -> SugarBond -> InputT IO (Maybe Bond)
-convertCond env _ sb = do
-    b <- convert env sb
-    case b of
-        Just b' -> return $ Just b'
-        Nothing -> return $ Nothing
 
 convert :: Env -> SugarBond -> InputT IO (Maybe Bond)
 convert env (SVar v) = case findBond env v of
@@ -69,14 +46,5 @@ convert _ (SRepeat n f d p) = return $ Just (repeat n f d p)
     -- case c' of
     --     Just c'' -> return $ Just (repeat n f d c'')
     --     Nothing -> return $ Nothing
-
--- replaceScaler :: Bond -> Scaler -> Double -> Bond
--- replaceScaler Zero _ _ = Zero
--- replaceScaler (One c) _ _ = One c
--- replaceScaler (And b1 b2) s a = And (replaceScaler b1 s a) (replaceScaler b2 s a)
--- replaceScaler (Or b1 b2) s a = Or (replaceScaler b1 s a) (replaceScaler b2 s a)
--- replaceScaler (Scale s' c) s a | s' == s = Scale (Mult a) (replaceScaler c s a)
---                                | otherwise = Scale s' (replaceScaler c s a)
--- replaceScaler (At d c) s a = At d (replaceScaler c s a)
 
 -- supose DL 10.0 
