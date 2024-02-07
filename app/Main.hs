@@ -17,6 +17,7 @@ import           Common
 import           Parse
 import           Sugar
 import           Eval
+import           State
 
 ---------------------
 --- Interpreter
@@ -28,7 +29,7 @@ main = runInputT defaultSettings main'
 main' :: InputT IO ()
 main' = do
   args <- lift getArgs
-  readevalprint args (S True [])
+  readevalprint args initState
 
 iname, iprompt :: String
 iname = "Bond Calculator"
@@ -37,14 +38,9 @@ iprompt = "CC> "
 ioExceptionCatcher :: IOException -> IO (Maybe a)
 ioExceptionCatcher _ = return Nothing
 
-data State = S
-  { inter :: Bool -- True, si estamos en modo interactivo.
-    , env :: Env  -- Entorno con variables globales y su valor
-  }
-
 --  read-eval-print loop
 readevalprint :: [String] -> State -> InputT IO ()
-readevalprint args state@(S inter env) =
+readevalprint args state@(S inter env _ _) =
   let rec st = do
         mx <- MC.catch
           (if inter then getInputLine iprompt else lift $ fmap Just getLine)
@@ -68,13 +64,10 @@ readevalprint args state@(S inter env) =
         rec state { inter = True } -- state' ver si va
 
 data Command = Compile CompileForm
-              -- | Print String
-              -- | Recompile
               | Browse
               | Quit
               | Help
               | Noop
-              -- | FindType String
 
 data CompileForm = CompileInteractive  String
                   | CompileFile         String
@@ -104,7 +97,7 @@ interpretCommand x = lift $ if isPrefixOf ":" x
   else return (Compile (CompileInteractive x))
 
 handleCommand :: State -> Command -> InputT IO (Maybe State)
-handleCommand state@(S inter env) cmd = case cmd of
+handleCommand state@(S inter env _ _) cmd = case cmd of
   Quit   -> lift $ when (not inter) (putStrLn "!@#$^&*") >> return Nothing
   Noop   -> return (Just state)
   Help   -> lift $ putStr (helpTxt commands) >> return (Just state)
@@ -209,8 +202,6 @@ parseIO f p x = lift $ case p x of
 
 handleDefOrExp :: State -> DefOrExp -> InputT IO State
 handleDefOrExp state (Def v sc) = do
-  -- c' <- eval c
-  -- return (state { env = (v, c') : env state })
   c <- convert (env state) sc
   case c of
     Just c' -> return (state { env = (v, c') : env state })
@@ -219,5 +210,5 @@ handleDefOrExp state (Def v sc) = do
       return state
 
 handleDefOrExp state (Eval exp) = do
-  c <- eval (env state) exp
+  c <- eval state exp
   return state
