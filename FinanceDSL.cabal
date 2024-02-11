@@ -26,8 +26,9 @@ source-repository head
 library
   exposed-modules:
       Common
+      Errors
       Eval
-      MonadBM
+      MonadBnd
       Parse
       State
       Sugar
