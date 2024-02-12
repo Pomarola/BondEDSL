@@ -58,10 +58,8 @@ runOrFail m = do
 
 repl :: (MonadBnd m, MonadMask m) => [FilePath] -> InputT m ()
 repl args = do
-       lift $ setInter True  -- ver que onda esto
        lift $ catchErrors $ mapM_ compileFile args
-       inter <- lift getInter
-       when inter $ liftIO $ putStrLn
+       liftIO $ putStrLn
          (  "Entorno interactivo de "
          ++ iname
          ++ ".\n"
@@ -163,12 +161,9 @@ loadFile f = do
 
 compileFile ::  MonadBnd m => FilePath -> m ()
 compileFile f = do
-    i <- getInter
-    setInter False
-    when i $ printBnd ("Abriendo "++f++"...")
+    printBnd ("Abriendo "++f++"...")
     defs <- loadFile f
     mapM_ handleDefOrExp defs
-    setInter i
 
 compilePhrase ::  MonadBnd m => String -> m ()
 compilePhrase x = do

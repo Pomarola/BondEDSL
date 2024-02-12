@@ -11,12 +11,6 @@ import Data.Time.Calendar (Day)
 
 class (MonadIO m, MonadState State m, MonadError Error m) => MonadBnd m where
 
-setInter :: MonadBnd m => Bool -> m ()
-setInter b = modify (\s-> s { inter = b })
-
-getInter :: MonadBnd m => m Bool
-getInter = gets inter
-
 addDef :: MonadBnd m => Def -> m ()
 addDef d = modify (\s -> s { env = d : env s })
 

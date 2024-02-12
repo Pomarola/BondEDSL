@@ -187,7 +187,7 @@ lexer cont s = case s of
                 (',':cs) -> cont TComma cs
                 ('&':cs) -> cont TAnd cs
                 unknown -> \line -> Failed $ 
-                        "Línea "++(show line)++": No se puede reconocer "++(show $ take 10 unknown)++ "..."
+                        "Linea "++(show line)++": No se puede reconocer "++(show $ take 10 unknown)++ "..."
                 where   
                         lexVar cs = case (span isAlpha cs) of
                                 ("def",rest) -> cont TDef rest

@@ -1,2 +1,1 @@
-def nose = at 10/12/2010 scale 20.0 rent 10.0 ARS amort 20.0 ARS
-def nos = at 10/12/2011 scale 20.0 rent 10.0 ARS amort 20.0 ARS
+def x = at 10/12/2011 zero
