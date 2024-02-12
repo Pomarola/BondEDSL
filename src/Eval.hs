@@ -28,7 +28,26 @@ import MonadBnd
 -- eval _ _ = return $ Nothing
 
 eval :: MonadBnd m => Exp -> m (Maybe Bond)
+eval (Print (conds, bond)) = do
+    b <- convertCond conds bond
+    case b of
+        Just b' -> do 
+            printBnd (show b')
+            return Nothing
+        Nothing -> return Nothing
 eval _ = return Nothing
+
+convertCond :: MonadBnd m => [Cond] -> SugarBond -> m (Maybe Bond)
+convertCond conds sb = do
+    b <- convert sb
+    case b of
+        Just b' -> do
+            cb <- applyConds conds b' 
+            return $ Just cb
+        Nothing -> return Nothing
+
+applyConds :: MonadBnd m => [Cond] -> Bond -> m Bond
+applyConds _ b = return b
 
 -- convertCond :: Env -> [Cond] -> SugarBond -> InputT IO (Maybe Bond)
 -- convertCond env conds sb = do

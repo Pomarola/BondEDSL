@@ -14,6 +14,15 @@ class (MonadIO m, MonadState State m, MonadError Error m) => MonadBnd m where
 addDef :: MonadBnd m => Def -> m ()
 addDef d = modify (\s -> s { env = d : env s })
 
+lookupDef :: MonadBnd m => Var -> m (Maybe Bond)
+lookupDef v = do
+     s <- get
+     case filter (hasName v) (env s) of
+       (_,bond):_ -> return $ Just bond
+       [] -> return Nothing
+   where hasName :: Var -> Def -> Bool
+         hasName n (n',_) = n == n'
+
 setDate :: MonadBnd m => Day -> m ()
 setDate d = modify (\s-> s { currentDate = d })
 
@@ -31,15 +40,6 @@ printBnd = liftIO . putStrLn
 
 printInlineBnd :: MonadBnd m => String -> m ()
 printInlineBnd = liftIO . putStr
-
-lookupDef :: MonadBnd m => Var -> m (Maybe Bond)
-lookupDef v = do
-     s <- get
-     case filter (hasName v) (env s) of
-       (_,bond):_ -> return (Just bond)
-       [] -> return Nothing
-   where hasName :: Var -> Def -> Bool
-         hasName n (n',_) = n == n'
 
 getEnv :: MonadBnd m => m [Def]
 getEnv = gets env

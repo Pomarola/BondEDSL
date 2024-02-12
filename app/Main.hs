@@ -110,8 +110,8 @@ handleCommand cmd = case cmd of
        Noop   ->  return True
        Help   ->  printBnd (helpTxt commands) >> return True
        Browse ->  do  
-                      env <- getEnv
-                      printBnd (unlines (reverse (nub (map show env))))
+                      e <- getEnv
+                      printBnd (unlines (reverse (nub (map show e))))
                       return True
        Compile c ->
                   do  case c of
@@ -175,25 +175,17 @@ parseIO f p x = case p x of
   Failed e -> throwError (Error e)
   Ok r -> return r
 
--- parseIO :: String -> (String -> ParseResult a) -> String -> IO (Maybe a)
--- parseIO f p x = case p x of
---   Failed e -> do
---     putStrLn (f ++ ": " ++ e)
---     return Nothing
---   Ok r -> return (Just r)
-
 handleDefOrExp :: MonadBnd m => DefOrExp -> m ()
 handleDefOrExp (Def v sb) = do
-  c <- convert sb
-  return ()
-  -- case c of
-  --   Just c' -> return (state { env = (v, c') : env state })
-  --   Nothing -> do
-  --     lift $ putStrLn ("No se pudo convertir " ++ v ++ " a bono.")
-  --     return state
+  b <- convert sb
+  case b of
+    Just b' -> addDef (v, b')
+    Nothing -> failBnd ("No se pudo convertir " ++ v ++ " a bono.")
 
 handleDefOrExp (Eval exp) = do
-  c <- eval exp
-  return ()
+  b <- eval exp
+  case b of
+    Just _ -> return ()
+    Nothing -> failBnd "No se pudo evaluar la expresión."
 
   -- return state

@@ -20,7 +20,23 @@ nextDate Quarterly d = addGregorianMonthsClip 3 d
 nextDate Monthly d = addGregorianMonthsClip 1 d
 
 convert :: MonadBnd m => SugarBond -> m (Maybe Bond)
-convert _ = return Nothing
+convert (SVar v) = lookupDef v
+convert (SAnd b1 b2) = do
+    b1' <- convert b1
+    case b1' of
+        Just b1'' -> do
+            b2' <- convert b2
+            case b2' of
+                Just b2'' -> return $ Just (and b1'' b2'')
+                Nothing -> return Nothing
+        Nothing -> return Nothing
+convert (SScale s b) = do
+    b' <- convert b
+    case b' of
+        Just b'' -> return $ Just (scale s b'')
+        Nothing -> return Nothing
+convert (SAt d p) = return $ Just (at d p)
+convert (SRepeat n f d p) = return $ Just (repeat n f d p)
 
 
 -- convert :: Env -> SugarBond -> InputT IO (Maybe Bond)
