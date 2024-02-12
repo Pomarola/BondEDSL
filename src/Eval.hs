@@ -2,7 +2,7 @@ module Eval where
 
 import Common
 import Sugar
-import Env
+import State
 import           System.Console.Haskeline
 import           Control.Monad.Except
 import MonadBnd

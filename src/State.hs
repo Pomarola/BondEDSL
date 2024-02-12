@@ -6,7 +6,7 @@ import Data.Time.Calendar (Day)
 
 type Def = (Var, Bond)
 
-data State = S
+data State = State
   { inter :: Bool, -- True, si estamos en modo interactivo.
     env :: [Def], -- Entorno con variables globales y su valor
     currentPrice :: Double,
@@ -17,7 +17,7 @@ todayDate :: IO Day
 todayDate = getCurrentTime >>= return . utctDay
 
 initState :: IO State
-initState = S False [] 0 <$> todayDate
+initState = State False [] 0 <$> todayDate
 
 findBond :: [Def] -> Var -> Maybe Bond
 findBond [] _ = Nothing

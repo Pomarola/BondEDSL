@@ -90,7 +90,7 @@ Bond            :: {SugarBond}
                 | REPEAT INT FREQ Date Payment                  { SRepeat $2 $3 $4 $5 }
 
 Payment         :: {Payment}
-                | RENT DOUBLE CURRENCY AMORT DOUBLE CURRENCY    { Pay ($2,$3) ($5,$6) }
+                : RENT DOUBLE CURRENCY AMORT DOUBLE CURRENCY    { Pay ($2,$3) ($5,$6) }
                 | AMORT DOUBLE CURRENCY RENT DOUBLE CURRENCY    { Pay ($5,$6) ($2,$3) }
                 | RENT DOUBLE CURRENCY                          { Pay ($2,$3) (0, None) }
                 | AMORT DOUBLE CURRENCY                         { Pay (0, None) ($2,$3) }

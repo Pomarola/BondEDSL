@@ -44,6 +44,15 @@ ghc-options:
 - -Wpartial-fields
 - -Wredundant-constraints
 
+default-extensions:
+- GADTs
+- StandaloneDeriving
+- PatternSynonyms
+- FlexibleInstances
+- FlexibleContexts
+- TupleSections
+- MultiWayIf
+
 library:
   source-dirs: src
 

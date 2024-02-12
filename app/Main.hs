@@ -10,8 +10,12 @@ import           Data.Maybe
 import           Prelude                 hiding ( print, exp )
 import           System.Console.Haskeline
 import qualified Control.Monad.Catch           as MC
-import           System.Environment
+import           System.Environment hiding ( getEnv )
 import           System.IO               hiding ( print )
+import Control.Monad.Catch (MonadMask)
+import System.Exit ( exitWith, ExitCode(ExitFailure) )
+
+
 
 import           Common
 import           Parse
@@ -19,19 +23,22 @@ import           Sugar
 import           Eval
 import           State
 import           MonadBnd
+import           Errors
 
 ---------------------
 --- Interpreter
 ---------------------
 
 main :: IO ()
-main = runOrFail (runInputT defaultSettings main')
+main = do 
+  args <- getArgs
+  runOrFail (runInputT defaultSettings (repl args))
 
-main' :: InputT IO ()
-main' = do
-  args <- lift getArgs
-  repl args
-  -- readevalprint args
+-- main' :: InputT IO ()
+-- main' = do
+--   args <- lift getArgs
+--   repl args
+--   -- readevalprint args
 
 iname, iprompt :: String
 iname = "Bond Calculator"
@@ -49,12 +56,12 @@ runOrFail m = do
       exitWith (ExitFailure 1)
     Right v -> return v
 
-repl :: (MonadFD4 m, MonadMask m) => [FilePath] -> InputT m ()
+repl :: (MonadBnd m, MonadMask m) => [FilePath] -> InputT m ()
 repl args = do
-       lift $ setInter True
+       lift $ setInter True  -- ver que onda esto
        lift $ catchErrors $ mapM_ compileFile args
-       s <- lift get
-       when (inter s) $ liftIO $ putStrLn
+       inter <- lift getInter
+       when inter $ liftIO $ putStrLn
          (  "Entorno interactivo de "
          ++ iname
          ++ ".\n"
@@ -99,12 +106,14 @@ interpretCommand x
      else
        return (Compile (CompileInteractive x))
 
-handleCommand ::  MonadFD4 m => Command -> m Bool
+handleCommand ::  MonadBnd m => Command -> m Bool
 handleCommand cmd = case cmd of
        Quit   ->  return False
        Noop   ->  return True
        Help   ->  printBnd (helpTxt commands) >> return True
-       Browse ->  do  printBnd (unlines (reverse (nub (map show getEnv))))
+       Browse ->  do  
+                      env <- getEnv
+                      printBnd (unlines (reverse (nub (map show env))))
                       return True
        Compile c ->
                   do  case c of
@@ -143,38 +152,45 @@ helpTxt cs
 -- compileFiles xs s =
 --   foldM (\s x -> compileFile (s { inter = False }) x) s xs
 
-loadFile ::  MonadFD4 m => FilePath -> m [DefOrExp]
+loadFile ::  MonadBnd m => FilePath -> m [DefOrExp]
 loadFile f = do
     let filename = reverse(dropWhile isSpace (reverse f))
     x <- liftIO $ catch (readFile filename)
                (\e -> do let err = show (e :: IOException)
                          hPutStrLn stderr ("No se pudo abrir el archivo " ++ filename ++ ": " ++ err)
                          return "")
-    setLastFile filename
     parseIO filename defs_parse x
 
-compileFile ::  MonadFD4 m => FilePath -> m ()
+compileFile ::  MonadBnd m => FilePath -> m ()
 compileFile f = do
     i <- getInter
     setInter False
-    when i $ printFD4 ("Abriendo "++f++"...")
+    when i $ printBnd ("Abriendo "++f++"...")
     defs <- loadFile f
-    foldM handleDefOrExp defs
+    mapM_ handleDefOrExp defs
     setInter i
 
-compilePhrase ::  MonadFD4 m => String -> m ()
+compilePhrase ::  MonadBnd m => String -> m ()
 compilePhrase x = do
     x' <- parseIO "<interactive>" def_or_exp_parse x
     handleDefOrExp x'
 
-parseIO :: MonadBnd m => String -> (String -> ParseResult a) -> String -> InputT m a
-parseIO f p x = lift $ case p x of
+parseIO :: MonadBnd m => String -> (String -> ParseResult a) -> String -> m a
+parseIO f p x = case p x of
   Failed e -> throwError (Error e)
   Ok r -> return r
+
+-- parseIO :: String -> (String -> ParseResult a) -> String -> IO (Maybe a)
+-- parseIO f p x = case p x of
+--   Failed e -> do
+--     putStrLn (f ++ ": " ++ e)
+--     return Nothing
+--   Ok r -> return (Just r)
 
 handleDefOrExp :: MonadBnd m => DefOrExp -> m ()
 handleDefOrExp (Def v sb) = do
   c <- convert sb
+  return ()
   -- case c of
   --   Just c' -> return (state { env = (v, c') : env state })
   --   Nothing -> do
@@ -183,4 +199,6 @@ handleDefOrExp (Def v sb) = do
 
 handleDefOrExp (Eval exp) = do
   c <- eval exp
+  return ()
+
   -- return state

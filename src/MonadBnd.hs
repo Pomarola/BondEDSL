@@ -2,9 +2,12 @@ module MonadBnd where
 
 import State
 import Common
-import Error ( Error(..) )
+import Errors
 import Control.Monad.Except
-import Control.Monad.State
+import Control.Monad.State hiding (State)
+import System.IO
+
+import Data.Time.Calendar (Day)
 
 class (MonadIO m, MonadState State m, MonadError Error m) => MonadBnd m where
 
@@ -41,8 +44,8 @@ lookupDef v = do
      case filter (hasName v) (env s) of
        (_,bond):_ -> return (Just bond)
        [] -> return Nothing
-   where hasName :: Name -> Def -> Bool
-         hasName v (v',_) = v == v'
+   where hasName :: Var -> Def -> Bool
+         hasName n (n',_) = n == n'
 
 getEnv :: MonadBnd m => m [Def]
 getEnv = gets env
@@ -50,12 +53,19 @@ getEnv = gets env
 failBnd :: MonadBnd m => String -> m a
 failBnd s = throwError (Error s)
 
+catchErrors  :: MonadBnd m => m a -> m (Maybe a)
+catchErrors c = catchError (Just <$> c)
+                           (\e -> liftIO $ hPrint stderr e
+                              >> return Nothing)
+
 type Bnd = StateT State (ExceptT Error IO)
 
 instance MonadBnd Bnd
 
 runBnd' :: Bnd a -> IO (Either Error (a, State))
-runBnd' m =  runExceptT $ runStateT m initState
+runBnd' m = do
+  s <- initState
+  runExceptT $ runStateT m s
 
 runBnd :: Bnd a -> IO (Either Error a)
 runBnd m = fmap fst <$> runBnd' m
