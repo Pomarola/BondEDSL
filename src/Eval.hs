@@ -3,6 +3,7 @@ module Eval where
 import Common
 import Sugar
 import MonadBnd
+import PrettyPrinter
 
 eval :: MonadBnd m => Exp -> m (Maybe Bond)
 eval (Print (conds, bond)) = do
@@ -10,6 +11,7 @@ eval (Print (conds, bond)) = do
     case b of
         Just b' -> do 
             printBnd (show b')
+            pPrintBond b'
             return Nothing
         Nothing -> return Nothing
 eval _ = return Nothing
