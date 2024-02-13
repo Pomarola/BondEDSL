@@ -24,6 +24,8 @@ import           Eval
 import           State
 import           MonadBnd
 import           Errors
+import          PrettyPrinter
+import PrettyPrinter (pPrintBond)
 
 ---------------------
 --- Interpreter
@@ -183,6 +185,8 @@ handleDefOrExp (Def v sb) = do
     Nothing -> failBnd ("No se pudo convertir " ++ v ++ " a bono.")
 
 handleDefOrExp (Eval exp) = do
+  d <- getDate
+  pPrintBond (At d PZero)
   b <- eval exp
   case b of
     Just _ -> return ()

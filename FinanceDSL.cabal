@@ -30,6 +30,7 @@ library
       Eval
       MonadBnd
       Parse
+      PrettyPrinter
       State
       Sugar
   other-modules:
@@ -51,6 +52,7 @@ library
       QuickCheck
     , array
     , base >=4.7 && <5
+    , boxes
     , containers
     , exceptions
     , extra
@@ -86,6 +88,7 @@ executable FinanceDSL-exe
     , QuickCheck
     , array
     , base >=4.7 && <5
+    , boxes
     , containers
     , exceptions
     , extra
@@ -120,6 +123,7 @@ test-suite FinanceDSL-test
     , QuickCheck
     , array
     , base >=4.7 && <5
+    , boxes
     , containers
     , exceptions
     , extra

@@ -197,8 +197,8 @@ lexer cont s = case s of
                                 ("yield",rest) -> cont TYield rest
                                 ("price",rest) -> cont TPrice rest
                                 ("suppose",rest) -> cont TSuppose rest
-                                ("BC-CER",rest) -> cont TBcracer rest
-                                ("BC-TC",rest) -> cont TBcratc rest
+                                ("BCCER",rest) -> cont TBcracer rest
+                                ("BCTC",rest) -> cont TBcratc rest
                                 ("PRICE",rest) -> cont TCurrent rest
                                 ("DATE",rest) -> cont TDate rest
                                 ("VN",rest) -> cont TVn rest

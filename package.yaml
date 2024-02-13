@@ -32,6 +32,7 @@ dependencies:
 - extra
 - text
 - time
+- boxes
 
 ghc-options:
 - -Wall
