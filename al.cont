@@ -5,3 +5,4 @@ def w = scale CER 1.0 y
 def b = repeat 5 ANNUAL 10/10/2010 zero
 def a = scale DL 100.0 repeat 5 ANNUAL 10/10/2010 amort 50.0 ARS
 def c = scale DL 100.0 b
+def d = at 10/12/2011 rent 10.0 ARS & at 10/12/2010 zero & at 10/12/2012 amort 20.0 ARS & at 10/12/2009 rent 15.0 ARS amort 25.0 ARS

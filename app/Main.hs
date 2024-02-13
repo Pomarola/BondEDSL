@@ -35,18 +35,9 @@ main = do
   args <- getArgs
   runOrFail (runInputT defaultSettings (repl args))
 
--- main' :: InputT IO ()
--- main' = do
---   args <- lift getArgs
---   repl args
---   -- readevalprint args
-
 iname, iprompt :: String
 iname = "Bond Calculator"
 iprompt = "CC> "
-
--- ioExceptionCatcher :: IOException -> IO (Maybe a)
--- ioExceptionCatcher _ = return Nothing
 
 runOrFail :: Bnd a -> IO a
 runOrFail m = do
@@ -188,5 +179,3 @@ handleDefOrExp (Eval exp) = do
   case b of
     Just _ -> return ()
     Nothing -> failBnd "No se pudo evaluar la expresion."
-
-  -- return state

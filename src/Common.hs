@@ -2,6 +2,8 @@ module Common where
 
 import Prelude hiding (and)
 import Data.Time.Calendar (Day)
+import Data.List (sortBy)
+import Data.Function (on)
 
 type Var = String
 
@@ -56,3 +58,15 @@ scale = Scale
 
 at :: Day -> Payment -> Bond
 at = At
+
+bondAsList :: Bond -> [(Day, Money, Money)]
+bondAsList (At d PZero) = [(d, (0, None), (0, None))]
+bondAsList (At d (Pay a r)) = [(d, a, r)]
+bondAsList (And b1 b2) = bondAsList b1 ++ bondAsList b2
+bondAsList (Scale _ b) = bondAsList b
+
+sortByDay :: [(Day, Money, Money)] -> [(Day, Money, Money)]
+sortByDay = sortBy (compare `on` (\(d, _, _) -> d))
+
+addMoney :: Money -> Money -> Money
+addMoney (a1, c1) (a2, c2) = (a1 + a2, if c1 == None then c2 else c1)

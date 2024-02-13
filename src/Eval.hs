@@ -11,7 +11,7 @@ eval (Print (conds, bond)) = do
     case b of
         Just b' -> do 
             printBnd (show b')
-            pPrintBond b'
+            printBondCashFlow b'
             return Nothing
         Nothing -> return Nothing
 eval _ = return Nothing
