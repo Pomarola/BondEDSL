@@ -4,6 +4,8 @@ import Common
 import Sugar
 import MonadBnd
 import PrettyPrinter
+import State
+import Control.Monad.Cont (MonadIO(liftIO))
 
 eval :: MonadBnd m => Exp -> m (Maybe Bond)
 eval (Print (conds, bond)) = do
@@ -34,6 +36,10 @@ applyConds ((CV v):cs) b = do
     setPrice v
     applyConds cs b
 applyConds ((Date d):cs) b = do
+    setDate d
+    applyConds cs b
+applyConds (Today:cs) b = do
+    d <- liftIO todayDate
     setDate d
     applyConds cs b
 

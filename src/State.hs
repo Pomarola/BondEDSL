@@ -16,5 +16,8 @@ data State = State
 todayDate :: IO Day
 todayDate = getCurrentTime >>= return . utctDay
 
-initState :: IO State
-initState = State [] 0 <$> todayDate
+oldDate :: Day
+oldDate = read "1900-01-01"
+
+initState :: State
+initState = State [] 0 oldDate

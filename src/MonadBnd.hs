@@ -58,8 +58,7 @@ instance MonadBnd Bnd
 
 runBnd' :: Bnd a -> IO (Either Error (a, State))
 runBnd' m = do
-  s <- initState
-  runExceptT $ runStateT m s
+  runExceptT $ runStateT m initState
 
 runBnd :: Bnd a -> IO (Either Error a)
 runBnd m = fmap fst <$> runBnd' m

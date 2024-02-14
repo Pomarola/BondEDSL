@@ -10,7 +10,8 @@ import Data.Time.Format
 
 printBondCashFlow :: MonadBnd m => Bond -> m ()
 printBondCashFlow b = do
-    let cf = sortByDay $ bondAsList b
+    from <- getDate
+    let cf = sortByDay $ filterFrom from $ bondAsList b
     let headers = ["Date", "Amort", "Rent", "Total"]
     let rowss = map (\(d, a, r) -> [dateToString d, moneyToString a, moneyToString r, moneyToString $ addMoney a r]) cf
     printBnd $ render $ hsep 2 left (map (vcat left . map text) (headers : rowss))

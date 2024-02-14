@@ -29,6 +29,7 @@ import Data.Time.Calendar (Day, fromGregorian)
         YIELD           { TYield }
         PRICE           { TPrice }
         SUPPOSE         { TSuppose }
+        TODAY           { TToday }
         BCRACER         { TBcracer }
         BCRATC          { TBcratc }
         CURRENT         { TCurrent }
@@ -81,6 +82,7 @@ Cond            :: {Cond}
                 | CURRENT DOUBLE                                { CV $2 }
                 | DATE Date                                     { Date $2 }
                 | VN INT                                        { VN $2 }
+                | TODAY                                         { Today }
 
 Bond            :: {SugarBond}
                 : Bond '&' Bond                                 { SAnd $1 $3 }
@@ -150,6 +152,7 @@ data Token = TEquals
                 | TYield
                 | TPrice
                 | TSuppose
+                | TToday
                 | TBcracer
                 | TBcratc
                 | TCurrent
@@ -197,6 +200,7 @@ lexer cont s = case s of
                                 ("yield",rest) -> cont TYield rest
                                 ("price",rest) -> cont TPrice rest
                                 ("suppose",rest) -> cont TSuppose rest
+                                ("TODAY",rest) -> cont TToday rest
                                 ("BCCER",rest) -> cont TBcracer rest
                                 ("BCTC",rest) -> cont TBcratc rest
                                 ("PRICE",rest) -> cont TCurrent rest
