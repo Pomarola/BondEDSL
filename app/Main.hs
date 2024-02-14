@@ -104,6 +104,8 @@ handleCommand cmd = case cmd of
        Browse ->  do  
                       e <- getEnv
                       printBnd (unlines (reverse (nub (map show e))))
+                      p <- getPortfolios
+                      printBnd (unlines (reverse (nub (map show p))))
                       return True
        Compile c ->
                   do  case c of
@@ -173,6 +175,9 @@ handleDefOrExp (Def v sb) = do
   case b of
     Just b' -> addDef (v, b')
     Nothing -> failBnd ("No se pudo convertir " ++ v ++ " a bono.")
+
+handleDefOrExp (Portfolio v ps) = do
+  addPortfolio (v, ps)
 
 handleDefOrExp (Eval exp) = do
   b <- eval exp

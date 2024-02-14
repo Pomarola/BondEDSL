@@ -22,6 +22,7 @@ import Data.Time.Calendar (Day, fromGregorian)
         '/'             { TSlash }
         ','             { TComma }
         '&'             { TAnd }
+        PORTFOLIO       { TPortfolio }
         DEF             { TDef }    
         VAR             { TVar $$ }
         PRINT           { TPrint }
@@ -70,15 +71,20 @@ CondBond        :: {CondBond}
                 : Bond                                          { ([],$1) }
                 | SUPPOSE '[' Conds ']' Bond                    { ($3,$5) }
 
-Def             : DEF VAR '=' Bond                              { Def $2 $4 }       
+Def             : DEF VAR '=' Bond                              { Def $2 $4 } 
+                | PORTFOLIO VAR '=' '[' Vars ']'                { Portfolio $2 $5 }
+
+Vars            : INT VAR ',' Vars                              { ($1,$2) : $4 }
+                | INT VAR                                       { [($1,$2)] }
+                |                                               { [] }
 
 Conds           : Cond ',' Conds                                { $1 : $3 }
                 | Cond                                          { [$1] }
                 |                                               { [] }
 
 Cond            :: {Cond}
-                : BCRACER DOUBLE                                  { BCCER $2 }
-                | BCRATC DOUBLE                                   { BCTC $2 }
+                : BCRACER DOUBLE                                { BCCER $2 }
+                | BCRATC DOUBLE                                 { BCTC $2 }
                 | CURRENT DOUBLE                                { CV $2 }
                 | DATE Date                                     { Date $2 }
                 | VN INT                                        { VN $2 }
@@ -145,6 +151,7 @@ data Token = TEquals
                 | TSlash
                 | TComma
                 | TAnd
+                | TPortfolio
                 | TDef
                 | TVar String
                 | TPrint
@@ -193,6 +200,7 @@ lexer cont s = case s of
                         "Linea "++(show line)++": No se puede reconocer "++(show $ take 10 unknown)++ "..."
                 where   
                         lexVar cs = case (span isAlphaNum cs) of
+                                ("portfolio",rest) -> cont TPortfolio rest
                                 ("def",rest) -> cont TDef rest
                                 ("repeat",rest) -> cont TRepeat rest
                                 ("print",rest) -> cont TPrint rest

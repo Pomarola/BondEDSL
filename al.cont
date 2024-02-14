@@ -8,3 +8,6 @@ def c = scale DL 100.0 b
 def d = at 10/12/2011 rent 10.0 ARS & at 10/12/2010 zero & at 10/12/2012 amort 20.0 ARS & at 10/12/2009 rent 15.0 amort 25.0 ARS
 
 def e = x & d 
+
+portfolio myPort = [100 x, 200 d]
+portfolio myPort2 = [100 y, 200 d, 300 e]

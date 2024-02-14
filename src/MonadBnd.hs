@@ -14,14 +14,29 @@ class (MonadIO m, MonadState State m, MonadError Error m) => MonadBnd m where
 addDef :: MonadBnd m => Def -> m ()
 addDef d = modify (\s -> s { env = d : env s })
 
-lookupDef :: MonadBnd m => Var -> m (Maybe Bond)
-lookupDef v = do
+addPortfolio :: MonadBnd m => Port -> m ()
+addPortfolio p = modify (\s -> s { porfolios = p : porfolios s })
+
+getEnv :: MonadBnd m => m [Def]
+getEnv = gets env
+
+getPortfolios :: MonadBnd m => m [Port]
+getPortfolios = gets porfolios
+
+lookupVar :: MonadBnd m => (State -> [(Var, a)]) -> Var -> m (Maybe a)
+lookupVar f v = do
      s <- get
-     case filter (hasName v) (env s) of
-       (_,bond):_ -> return $ Just bond
+     case filter (hasName v) (f s) of
+       (_,item):_ -> return $ Just item
        [] -> return Nothing
-   where hasName :: Var -> Def -> Bool
+   where hasName :: Var -> (Var, a) -> Bool
          hasName n (n',_) = n == n'
+
+lookupDef :: MonadBnd m => Var -> m (Maybe Bond)
+lookupDef = lookupVar env
+
+lookupPortfolio :: MonadBnd m => Var -> m (Maybe [(Int, Var)])
+lookupPortfolio = lookupVar porfolios
 
 setDate :: MonadBnd m => Day -> m ()
 setDate d = modify (\s-> s { currentDate = d })
@@ -40,9 +55,6 @@ printBnd = liftIO . putStrLn
 
 printInlineBnd :: MonadBnd m => String -> m ()
 printInlineBnd = liftIO . putStr
-
-getEnv :: MonadBnd m => m [Def]
-getEnv = gets env
 
 failBnd :: MonadBnd m => String -> m a
 failBnd s = throwError (Error s)
