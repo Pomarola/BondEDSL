@@ -31,9 +31,7 @@ data Exp =
 
 type CondBond = ([Cond], SugarBond)
 
-type Money = (Double, Currency)
-
-data Payment = PZero | Pay Money Money
+data Payment = PZero | Pay Double Double Currency
     deriving Show
 
 data SugarBond =
@@ -59,17 +57,14 @@ scale = Scale
 at :: Day -> Payment -> Bond
 at = At
 
-bondAsList :: Bond -> [(Day, Money, Money)]
-bondAsList (At d PZero) = [(d, (0, None), (0, None))]
-bondAsList (At d (Pay a r)) = [(d, a, r)]
+bondAsList :: Bond -> [(Day, Double, Double, Currency)]
+bondAsList (At d PZero) = [(d, 0, 0, None)]
+bondAsList (At d (Pay a r c)) = [(d, a, r, c)]
 bondAsList (And b1 b2) = bondAsList b1 ++ bondAsList b2
 bondAsList (Scale _ b) = bondAsList b
 
-sortByDay :: [(Day, Money, Money)] -> [(Day, Money, Money)]
-sortByDay = sortBy (compare `on` (\(d, _, _) -> d))
+sortByDay :: [(Day, Double, Double, Currency)] -> [(Day, Double, Double, Currency)]
+sortByDay = sortBy (compare `on` (\(d, _, _, _) -> d))
 
-filterFrom :: Day -> [(Day, Money, Money)] -> [(Day, Money, Money)]
-filterFrom d = filter (\(d', _, _) -> d' >= d)
-
-addMoney :: Money -> Money -> Money
-addMoney (a1, c1) (a2, c2) = (a1 + a2, if c1 == None then c2 else c1)
+filterFrom :: Day -> [(Day, Double, Double, Currency)] -> [(Day, Double, Double, Currency)]
+filterFrom d = filter (\(d', _, _, _) -> d' >= d)

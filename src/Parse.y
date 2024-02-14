@@ -77,8 +77,8 @@ Conds           : Cond ',' Conds                                { $1 : $3 }
                 |                                               { [] }
 
 Cond            :: {Cond}
-                : BCRACER DOUBLE                                { BCCER $2 }
-                | BCRATC DOUBLE                                 { BCTC $2 }
+                : BCRACER DOUBLE                                  { BCCER $2 }
+                | BCRATC DOUBLE                                   { BCTC $2 }
                 | CURRENT DOUBLE                                { CV $2 }
                 | DATE Date                                     { Date $2 }
                 | VN INT                                        { VN $2 }
@@ -92,10 +92,10 @@ Bond            :: {SugarBond}
                 | REPEAT INT FREQ Date Payment                  { SRepeat $2 $3 $4 $5 }
 
 Payment         :: {Payment}
-                : RENT DOUBLE CURRENCY AMORT DOUBLE CURRENCY    { Pay ($2,$3) ($5,$6) }
-                | AMORT DOUBLE CURRENCY RENT DOUBLE CURRENCY    { Pay ($5,$6) ($2,$3) }
-                | RENT DOUBLE CURRENCY                          { Pay ($2,$3) (0, None) }
-                | AMORT DOUBLE CURRENCY                         { Pay (0, None) ($2,$3) }
+                : RENT DOUBLE AMORT DOUBLE CURRENCY             { Pay $2 $4 $5 }
+                | AMORT DOUBLE RENT DOUBLE CURRENCY             { Pay $4 $2 $5 }
+                | RENT DOUBLE CURRENCY                          { Pay $2 0 $3 }
+                | AMORT DOUBLE CURRENCY                         { Pay 0 $2 $3 }
                 | ZERO                                          { PZero }
 
 Scaler          :: {Scaler}
@@ -192,7 +192,7 @@ lexer cont s = case s of
                 unknown -> \line -> Failed $ 
                         "Linea "++(show line)++": No se puede reconocer "++(show $ take 10 unknown)++ "..."
                 where   
-                        lexVar cs = case (span isAlpha cs) of
+                        lexVar cs = case (span isAlphaNum cs) of
                                 ("def",rest) -> cont TDef rest
                                 ("repeat",rest) -> cont TRepeat rest
                                 ("print",rest) -> cont TPrint rest
@@ -200,9 +200,9 @@ lexer cont s = case s of
                                 ("yield",rest) -> cont TYield rest
                                 ("price",rest) -> cont TPrice rest
                                 ("suppose",rest) -> cont TSuppose rest
-                                ("TODAY",rest) -> cont TToday rest
-                                ("BCCER",rest) -> cont TBcracer rest
                                 ("BCTC",rest) -> cont TBcratc rest
+                                ("BCCER",rest) -> cont TBcracer rest
+                                ("TODAY",rest) -> cont TToday rest
                                 ("PRICE",rest) -> cont TCurrent rest
                                 ("DATE",rest) -> cont TDate rest
                                 ("VN",rest) -> cont TVn rest

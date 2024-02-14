@@ -149,7 +149,7 @@ loadFile f = do
                (\e -> do let err = show (e :: IOException)
                          hPutStrLn stderr ("No se pudo abrir el archivo " ++ filename ++ ": " ++ err)
                          return "")
-    parseIO filename defs_parse x
+    parseIO defs_parse x
 
 compileFile ::  MonadBnd m => FilePath -> m ()
 compileFile f = do
@@ -159,11 +159,11 @@ compileFile f = do
 
 compilePhrase ::  MonadBnd m => String -> m ()
 compilePhrase x = do
-    x' <- parseIO "<interactive>" def_or_exp_parse x
+    x' <- parseIO def_or_exp_parse x
     handleDefOrExp x'
 
-parseIO :: MonadBnd m => String -> (String -> ParseResult a) -> String -> m a
-parseIO f p x = case p x of
+parseIO :: MonadBnd m => (String -> ParseResult a) -> String -> m a
+parseIO p x = case p x of
   Failed e -> throwError (Error e)
   Ok r -> return r
 

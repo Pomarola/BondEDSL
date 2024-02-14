@@ -52,7 +52,7 @@ applyScalers m (Scale s@(CER _) b) = Scale s (applyScalers m b)
 applyScalers m (Scale s@(DolarLinked _) b) = Scale s (applyScalers m b)
 applyScalers m (And b1 b2) = And (applyScalers m b1) (applyScalers m b2)
 applyScalers _ b@(At _ PZero) = b
-applyScalers m (At d (Pay (a, c1) (b, c2))) = At d (Pay (a * m, c1) (b * m, c2))
+applyScalers m (At d (Pay r a c)) = At d (Pay (r * m) (a * m) c)
 
 replaceScaler :: Scaler -> Bond -> Bond 
 replaceScaler n@(CER new) (Scale (CER old) b) = Scale (Mult (new / old)) (replaceScaler n b)
