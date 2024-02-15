@@ -1,4 +1,4 @@
-module Errors where
+module Errors (Error(..)) where
 
 newtype Error = Error String
 

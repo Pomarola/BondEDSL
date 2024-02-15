@@ -1,11 +1,12 @@
-module Eval where
+module Eval (eval) where
+
+import Control.Monad.Cont (MonadIO(liftIO))
 
 import Common
 import Sugar
 import MonadBnd
 import PrettyPrinter
 import State
-import Control.Monad.Cont (MonadIO(liftIO))
 
 eval :: MonadBnd m => Exp -> m Bool
 eval (Cashflow (conds, bond)) = do

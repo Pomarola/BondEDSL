@@ -1,8 +1,8 @@
-module State where
+module State (oldDate, todayDate, initState, State(..), Def, Port) where
 
-import Common (Var, Bond)
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Time.Calendar (Day)
+import Common (Var, Bond)
 
 type Def = (Var, Bond)
 type Port = (Var, [(Int, Var)])

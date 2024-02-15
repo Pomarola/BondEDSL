@@ -1,11 +1,11 @@
-module PrettyPrinter where 
+module PrettyPrinter (printBondCashFlow, printPortfolioCashFlow) where 
 
+import Text.PrettyPrint.Boxes ( text, hsep, left, render, vcat )
+import Data.Time.Calendar ( Day )
+import Data.Time.Format ( defaultTimeLocale, formatTime )
 import Common
 import MonadBnd
 
-import Text.PrettyPrint.Boxes
-import Data.Time.Calendar
-import Data.Time.Format
 
 printBondCashFlow :: MonadBnd m => Bond -> m ()
 printBondCashFlow b = do

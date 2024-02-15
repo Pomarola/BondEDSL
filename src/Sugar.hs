@@ -1,12 +1,9 @@
-module Sugar where
-
-import           System.Console.Haskeline
+module Sugar (convert) where
 
 import Data.Time.Calendar (Day, addGregorianMonthsClip)
 import Prelude hiding (and, repeat)
 
 import Common
-import State
 import MonadBnd
 
 repeat :: Int -> Frequency -> Day -> Payment -> Bond

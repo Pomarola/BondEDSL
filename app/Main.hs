@@ -1,21 +1,14 @@
-module Main where
+module Main (main) where
 
-import           Control.Exception              ( catch
-                                                , IOException
-                                                )
-import           Control.Monad.Except
-import           Data.Char
-import           Data.List
-import           Data.Maybe
-import           Prelude                 hiding ( print, exp )
-import           System.Console.Haskeline
-import qualified Control.Monad.Catch           as MC
-import           System.Environment hiding ( getEnv )
-import           System.IO               hiding ( print )
+import Control.Exception ( catch, IOException )
+import Control.Monad.Except ( when, MonadError(throwError), MonadTrans(lift), MonadIO(liftIO) )
+import Data.Char ( isSpace )
+import Data.List ( nub, intercalate, isPrefixOf, isSuffixOf )
+import Prelude hiding ( print, exp )
+import System.Console.Haskeline ( getInputLine, defaultSettings, runInputT, InputT )
+import System.IO ( hPutStrLn, stderr, hPrint )
 import Control.Monad.Catch (MonadMask)
 import System.Exit ( exitWith, ExitCode(ExitFailure) )
-
-
 
 import           Common
 import           Parse
@@ -24,16 +17,10 @@ import           Eval
 import           State
 import           MonadBnd
 import           Errors
-import          PrettyPrinter
-
----------------------
---- Interpreter
----------------------
 
 main :: IO ()
 main = do
-  args <- getArgs
-  runOrFail (runInputT defaultSettings (repl args))
+  runOrFail (runInputT defaultSettings repl)
 
 iname, iprompt :: String
 iname = "Bond Calculator"
@@ -48,9 +35,8 @@ runOrFail m = do
       exitWith (ExitFailure 1)
     Right v -> return v
 
-repl :: (MonadBnd m, MonadMask m) => [FilePath] -> InputT m ()
-repl args = do
-       lift $ catchErrors $ mapM_ compileFile args
+repl :: (MonadBnd m, MonadMask m) => InputT m ()
+repl = do
        liftIO $ putStrLn
          (  "Entorno interactivo de "
          ++ iname
@@ -103,8 +89,10 @@ handleCommand cmd = case cmd of
        Help   ->  printBnd (helpTxt commands) >> return True
        Browse ->  do
                       e <- getEnv
+                      printBnd "Entorno de Bonos:"
                       printBnd (unlines (reverse (nub (map show e))))
                       p <- getPortfolios
+                      printBnd "Entorno de Portfolios:"
                       printBnd (unlines (reverse (nub (map show p))))
                       return True
        Compile c ->
@@ -137,21 +125,20 @@ helpTxt cs
                    let  ct = intercalate ", " (map (++ if null a then "" else " " ++ a) c)
                    in   ct ++ replicate ((24 - length ct) `max` 2) ' ' ++ d) cs)
 
--- checkExtension:: String -> Bool
--- checkExtension = ".cc" `isSuffixOf` reverse (dropWhile isSpace (reverse s))
-
--- compileFiles :: MonadBnd m => [String] -> InputT m ()
--- compileFiles xs s =
---   foldM (\s x -> compileFile (s { inter = False }) x) s xs
+checkExtension:: String -> Bool
+checkExtension f = ".bnd" `isSuffixOf` f
 
 loadFile ::  MonadBnd m => FilePath -> m [DefOrExp]
-loadFile f = do
-    let filename = reverse(dropWhile isSpace (reverse f))
-    x <- liftIO $ catch (readFile filename)
-               (\e -> do let err = show (e :: IOException)
-                         hPutStrLn stderr ("No se pudo abrir el archivo " ++ filename ++ ": " ++ err)
-                         return "")
-    parseIO defs_parse x
+loadFile f =
+    let filename = reverse (dropWhile isSpace (reverse f)) in
+    if not (checkExtension filename)
+      then failBnd ("El archivo " ++ filename ++ " no tiene extension .bnd")
+    else do
+      x <- liftIO $ catch (readFile filename)
+                (\e -> do let err = show (e :: IOException)
+                          hPutStrLn stderr ("No se pudo abrir el archivo " ++ filename ++ ": " ++ err)
+                          return "")
+      parseIO defs_parse x
 
 compileFile ::  MonadBnd m => FilePath -> m ()
 compileFile f = do
