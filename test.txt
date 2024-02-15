@@ -1,0 +1,3 @@
+portcashflow suppose [DATE 10/10/2011, BCCER 2.0] myPort3
+portcashflow suppose [TODAY] myPort3
+portcashflow myPort3

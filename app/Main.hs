@@ -37,7 +37,7 @@ main = do
 
 iname, iprompt :: String
 iname = "Bond Calculator"
-iprompt = "CC> "
+iprompt = "BC> "
 
 runOrFail :: Bnd a -> IO a
 runOrFail m = do
