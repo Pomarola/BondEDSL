@@ -31,7 +31,7 @@ import          PrettyPrinter
 ---------------------
 
 main :: IO ()
-main = do 
+main = do
   args <- getArgs
   runOrFail (runInputT defaultSettings (repl args))
 
@@ -101,7 +101,7 @@ handleCommand cmd = case cmd of
        Quit   ->  return False
        Noop   ->  return True
        Help   ->  printBnd (helpTxt commands) >> return True
-       Browse ->  do  
+       Browse ->  do
                       e <- getEnv
                       printBnd (unlines (reverse (nub (map show e))))
                       p <- getPortfolios
@@ -181,6 +181,4 @@ handleDefOrExp (Portfolio v ps) = do
 
 handleDefOrExp (Eval exp) = do
   b <- eval exp
-  case b of
-    Just _ -> return ()
-    Nothing -> failBnd "No se pudo evaluar la expresion."
+  if b then return () else failBnd "No se pudo evaluar la expresion."

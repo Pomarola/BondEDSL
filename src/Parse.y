@@ -26,9 +26,11 @@ import Data.Time.Calendar (Day, fromGregorian)
         DEF             { TDef }    
         VAR             { TVar $$ }
         PRINT           { TPrint }
-        TIR             { TTir }
         YIELD           { TYield }
-        PRICE           { TPrice }
+        PARITY          { TParity }
+        DETAIL          { TDetail }
+        CASHFLOW        { TCashflow }
+        PORTCASHFLOW    { TPortCashflow }
         SUPPOSE         { TSuppose }
         TODAY           { TToday }
         BCRACER         { TBcracer }
@@ -63,9 +65,11 @@ Defs            : Def Defs                                      { $1 : $2 }
                 
 Exp             :: {Exp}
                 : PRINT CondBond                                { Print $2 }
-                | TIR CondBond                                  { Tir $2 }
                 | YIELD CondBond                                { Yield $2 }
-                | PRICE CondBond                                { Price $2 }
+                | PARITY CondBond                               { Parity $2 }
+                | DETAIL CondBond                               { Detail $2 }
+                | CASHFLOW CondBond                             { Cashflow $2 }
+                | PORTCASHFLOW VAR                              { PortCashflow $2 }
 
 CondBond        :: {CondBond}
                 : Bond                                          { ([],$1) }
@@ -155,9 +159,11 @@ data Token = TEquals
                 | TDef
                 | TVar String
                 | TPrint
-                | TTir
                 | TYield
-                | TPrice
+                | TParity
+                | TDetail
+                | TCashflow
+                | TPortCashflow
                 | TSuppose
                 | TToday
                 | TBcracer
@@ -204,9 +210,11 @@ lexer cont s = case s of
                                 ("def",rest) -> cont TDef rest
                                 ("repeat",rest) -> cont TRepeat rest
                                 ("print",rest) -> cont TPrint rest
-                                ("tir",rest) -> cont TTir rest
                                 ("yield",rest) -> cont TYield rest
-                                ("price",rest) -> cont TPrice rest
+                                ("parity",rest) -> cont TParity rest
+                                ("detail",rest) -> cont TDetail rest
+                                ("cashflow",rest) -> cont TCashflow rest
+                                ("portcashflow",rest) -> cont TPortCashflow rest
                                 ("suppose",rest) -> cont TSuppose rest
                                 ("BCTC",rest) -> cont TBcratc rest
                                 ("BCCER",rest) -> cont TBcracer rest

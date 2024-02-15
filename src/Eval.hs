@@ -7,16 +7,36 @@ import PrettyPrinter
 import State
 import Control.Monad.Cont (MonadIO(liftIO))
 
-eval :: MonadBnd m => Exp -> m (Maybe Bond)
-eval (Print (conds, bond)) = do
+eval :: MonadBnd m => Exp -> m Bool
+eval (Cashflow (conds, bond)) = do
+    printBnd "Cashflow for Bond"
     b <- convertCond conds bond
     case b of
         Just b' -> do 
-            printBnd (show b')
             printBondCashFlow b'
-            return Nothing
-        Nothing -> return Nothing
-eval _ = return Nothing
+            return True
+        Nothing -> return False
+eval (PortCashflow var) = do
+    printBnd $ "Cashflow for portfolio" ++ var
+    p <- lookupPortfolio var 
+    case p of 
+        Just ps -> do
+            bs <- evalPort ps
+            printPortfolioCashFlow bs
+            return True
+        Nothing -> return False
+
+eval _ = return False
+
+evalPort :: MonadBnd m => [(Int, Var)] -> m [(Var, Bond)]
+evalPort [] = return []
+evalPort ((n, v):ps) = do
+    b <- lookupDef v
+    case b of
+        Just b' -> do
+            bs <- evalPort ps
+            return ((v, applyScalers (fromIntegral n) b') : bs)
+        Nothing -> return []
 
 convertCond :: MonadBnd m => [Cond] -> SugarBond -> m (Maybe Bond)
 convertCond conds sb = do

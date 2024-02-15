@@ -24,9 +24,14 @@ data DefOrExp = Def Var SugarBond | Eval Exp | Portfolio Var [(Int, Var)]
 
 data Exp =
     Print CondBond      -- Uno que printee el contrato y otro que printee el cash flow?
-    | Tir CondBond
     | Yield CondBond
-    | Price CondBond
+    | Parity CondBond
+    | Detail CondBond
+    | Cashflow CondBond
+    | PortCashflow Var
+    
+    -- | Duration CondBond TIR
+
     deriving Show
 
 type CondBond = ([Cond], SugarBond)
@@ -57,8 +62,11 @@ scale = Scale
 at :: Day -> Payment -> Bond
 at = At
 
+bondAsListWithVar :: Var -> Bond -> [(Day, Var, Double, Double, Currency, [Scaler])]
+bondAsListWithVar v b = map (\(d, a, r, c, s) -> (d, v, a, r, c, s)) $ bondAsList b
+
 bondAsList :: Bond -> [(Day, Double, Double, Currency, [Scaler])]
-bondAsList = sortByDay . bondAsList' []
+bondAsList = bondAsList' []
 
 bondAsList' :: [Scaler] -> Bond -> [(Day, Double, Double, Currency, [Scaler])]
 bondAsList' xs (At d PZero) = [(d, 0, 0, None, xs)]
@@ -68,6 +76,9 @@ bondAsList' xs (Scale s b) = bondAsList' (s : xs) b
 
 sortByDay :: [(Day, Double, Double, Currency, [Scaler])] -> [(Day, Double, Double, Currency, [Scaler])]
 sortByDay = sortBy (compare `on` (\(d, _, _, _, _) -> d))
+
+sortByDayVar :: [(Day, Var, Double, Double, Currency, [Scaler])] -> [(Day, Var, Double, Double, Currency, [Scaler])]
+sortByDayVar = sortBy (compare `on` (\(d, _, _, _, _, _) -> d))
 
 filterFrom :: Day -> [(Day, Double, Double, Currency, [Scaler])] -> [(Day, Double, Double, Currency, [Scaler])]
 filterFrom d = filter (\(d', _, _, _, _) -> d' >= d)
