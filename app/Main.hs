@@ -128,12 +128,8 @@ helpTxt cs
 checkExtension:: String -> Bool
 checkExtension f = ".bnd" `isSuffixOf` f
 
-loadFile ::  MonadBnd m => FilePath -> m [DefOrExp]
-loadFile f =
-    let filename = reverse (dropWhile isSpace (reverse f)) in
-    if not (checkExtension filename)
-      then failBnd ("El archivo " ++ filename ++ " no tiene extension .bnd")
-    else do
+loadFile ::  MonadBnd m => String -> m [DefOrExp]
+loadFile filename = do
       x <- liftIO $ catch (readFile filename)
                 (\e -> do let err = show (e :: IOException)
                           hPutStrLn stderr ("No se pudo abrir el archivo " ++ filename ++ ": " ++ err)
@@ -141,10 +137,13 @@ loadFile f =
       parseIO defs_parse x
 
 compileFile ::  MonadBnd m => FilePath -> m ()
-compileFile f = do
-    printBnd ("Abriendo "++f++"...")
-    defs <- loadFile f
-    mapM_ handleDefOrExp defs
+compileFile f = let filename = reverse (dropWhile isSpace (reverse f)) in
+    if not (checkExtension filename)
+      then failBnd ("El archivo " ++ filename ++ " no tiene extension .bnd")
+    else do
+      printBnd ("Abriendo "++f++"...")
+      defs <- loadFile filename
+      mapM_ handleDefOrExp defs
 
 compilePhrase ::  MonadBnd m => String -> m ()
 compilePhrase x = do
