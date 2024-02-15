@@ -62,26 +62,20 @@ scale = Scale
 at :: Day -> Payment -> Bond
 at = At
 
-bondAsListWithVar :: Var -> Bond -> [(Day, Var, Double, Double, Currency, [Scaler])]
-bondAsListWithVar v b = map (\(d, a, r, c, s) -> (d, v, a, r, c, s)) $ bondAsList b
+type BondAsTuple = (Day, Maybe Var, Double, Double, Currency, [Scaler])
 
-bondAsList :: Bond -> [(Day, Double, Double, Currency, [Scaler])]
-bondAsList = bondAsList' []
+bondAsList :: Maybe Var -> Bond -> [BondAsTuple]
+bondAsList Nothing = bondAsList' [] Nothing
+bondAsList v = bondAsList' [] v
 
-bondAsList' :: [Scaler] -> Bond -> [(Day, Double, Double, Currency, [Scaler])]
-bondAsList' xs (At d PZero) = [(d, 0, 0, None, xs)]
-bondAsList' xs (At d (Pay a r c)) = [(d, a, r, c, xs)]
-bondAsList' xs (And b1 b2) = bondAsList' xs b1 ++ bondAsList' xs b2
-bondAsList' xs (Scale s b) = bondAsList' (s : xs) b 
+bondAsList' :: [Scaler] -> Maybe Var -> Bond -> [BondAsTuple]
+bondAsList' xs v (At d PZero) = [(d, v, 0, 0, None, xs)]
+bondAsList' xs v (At d (Pay a r c)) = [(d, v, a, r, c, xs)]
+bondAsList' xs v (And b1 b2) = bondAsList' xs v b1 ++ bondAsList' xs v b2
+bondAsList' xs v (Scale s b) = bondAsList' (s : xs) v b 
 
-sortByDay :: [(Day, Double, Double, Currency, [Scaler])] -> [(Day, Double, Double, Currency, [Scaler])]
-sortByDay = sortBy (compare `on` (\(d, _, _, _, _) -> d))
+sortByDay :: [BondAsTuple] -> [BondAsTuple]
+sortByDay = sortBy (compare `on` (\(d, _, _, _, _, _) -> d))
 
-sortByDayVar :: [(Day, Var, Double, Double, Currency, [Scaler])] -> [(Day, Var, Double, Double, Currency, [Scaler])]
-sortByDayVar = sortBy (compare `on` (\(d, _, _, _, _, _) -> d))
-
-filterFrom :: Day -> [(Day, Double, Double, Currency, [Scaler])] -> [(Day, Double, Double, Currency, [Scaler])]
-filterFrom d = filter (\(d', _, _, _, _) -> d' >= d)
-
-filterFromVar :: Day -> [(Day, Var, Double, Double, Currency, [Scaler])] -> [(Day, Var, Double, Double, Currency, [Scaler])]
-filterFromVar d = filter (\(d', _, _, _, _, _) -> d' >= d)
+filterFrom :: Day -> [BondAsTuple] -> [BondAsTuple]
+filterFrom d = filter (\(d', _, _, _, _, _) -> d' >= d)

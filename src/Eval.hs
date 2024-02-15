@@ -14,20 +14,37 @@ eval (Cashflow (conds, bond)) = do
     b <- convertCond conds bond
     case b of
         Just b' -> do 
-            printBondCashFlow b'
+            from <- getDate
+            let cf = sortByDay $ filterFrom from $ bondAsList Nothing b'
+            printBondCashFlow cf
             return True
         Nothing -> return False
+
 eval (PortCashflow (conds, var)) = do
     printBnd $ "Cashflow for portfolio" ++ var
     p <- lookupPortfolio var 
     case p of 
         Just ps -> do
-            bs <- evalPort conds ps 
-            printPortfolioCashFlow bs
+            ps' <- evalPort conds ps 
+            from <- getDate
+            let cfs = sortByDay $ filterFrom from $ concatMap (\(v,b) -> bondAsList (Just v) b) ps'
+            printPortfolioCashFlow cfs
             return True
         Nothing -> return False
 
+-- eval (Detail (conds, bond)) = do
+--     printBnd "Detail for Bond"
+--     b <- convertCond conds bond
+--     case b of
+--         Just b' -> do 
+--             getBondDetail bd from
+--             printBondDetail b'
+--             return True
+--         Nothing -> return False
+
 eval _ = return False
+
+-- getBondDetail :: MonadBnd m => Bond -> Day -> m ()
 
 evalPort :: MonadBnd m => [Cond] -> [(Int, Var)] -> m [(Var, Bond)]
 evalPort _ [] = return []
