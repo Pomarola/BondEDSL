@@ -181,4 +181,5 @@ handleDefOrExp (Portfolio v ps) = do
 
 handleDefOrExp (Eval exp) = do
   b <- eval exp
+  setDate oldDate
   if b then return () else failBnd "No se pudo evaluar la expresion."

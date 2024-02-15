@@ -16,26 +16,27 @@ eval (Cashflow (conds, bond)) = do
             printBondCashFlow b'
             return True
         Nothing -> return False
-eval (PortCashflow var) = do
+eval (PortCashflow (conds, var)) = do
     printBnd $ "Cashflow for portfolio" ++ var
     p <- lookupPortfolio var 
     case p of 
         Just ps -> do
-            bs <- evalPort ps
+            bs <- evalPort conds ps 
             printPortfolioCashFlow bs
             return True
         Nothing -> return False
 
 eval _ = return False
 
-evalPort :: MonadBnd m => [(Int, Var)] -> m [(Var, Bond)]
-evalPort [] = return []
-evalPort ((n, v):ps) = do
+evalPort :: MonadBnd m => [Cond] -> [(Int, Var)] -> m [(Var, Bond)]
+evalPort _ [] = return []
+evalPort conds ((n, v):ps) = do
     b <- lookupDef v
     case b of
         Just b' -> do
-            bs <- evalPort ps
-            return ((v, applyScalers (fromIntegral n) b') : bs)
+            bs <- evalPort conds ps
+            bc <- applyConds conds b'
+            return ((v, applyScalers (fromIntegral n) bc) : bs)
         Nothing -> return []
 
 convertCond :: MonadBnd m => [Cond] -> SugarBond -> m (Maybe Bond)

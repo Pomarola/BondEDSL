@@ -28,7 +28,7 @@ data Exp =
     | Parity CondBond
     | Detail CondBond
     | Cashflow CondBond
-    | PortCashflow Var
+    | PortCashflow ([Cond], Var)
     
     -- | Duration CondBond TIR
 
@@ -82,3 +82,6 @@ sortByDayVar = sortBy (compare `on` (\(d, _, _, _, _, _) -> d))
 
 filterFrom :: Day -> [(Day, Double, Double, Currency, [Scaler])] -> [(Day, Double, Double, Currency, [Scaler])]
 filterFrom d = filter (\(d', _, _, _, _) -> d' >= d)
+
+filterFromVar :: Day -> [(Day, Var, Double, Double, Currency, [Scaler])] -> [(Day, Var, Double, Double, Currency, [Scaler])]
+filterFromVar d = filter (\(d', _, _, _, _, _) -> d' >= d)

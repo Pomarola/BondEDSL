@@ -69,7 +69,10 @@ Exp             :: {Exp}
                 | PARITY CondBond                               { Parity $2 }
                 | DETAIL CondBond                               { Detail $2 }
                 | CASHFLOW CondBond                             { Cashflow $2 }
-                | PORTCASHFLOW VAR                              { PortCashflow $2 }
+                | PORTCASHFLOW CondVar                          { PortCashflow $2 }
+
+CondVar         : VAR                                           { ([],$1) }
+                | SUPPOSE '[' Conds ']' VAR                     { ($3,$5) }
 
 CondBond        :: {CondBond}
                 : Bond                                          { ([],$1) }
