@@ -75,7 +75,13 @@ bondAsList' xs v (And b1 b2) = bondAsList' xs v b1 ++ bondAsList' xs v b2
 bondAsList' xs v (Scale s b) = bondAsList' (s : xs) v b 
 
 sortByDay :: [BondAsTuple] -> [BondAsTuple]
-sortByDay = sortBy (compare `on` (\(d, _, _, _, _, _) -> d))
+sortByDay = sortBy (compare `on` tupleDate)
 
 filterFrom :: Day -> [BondAsTuple] -> [BondAsTuple]
-filterFrom d = filter (\(d', _, _, _, _, _) -> d' >= d)
+filterFrom d = filter (\t -> tupleDate t >= d)
+
+filterTo :: Day -> [BondAsTuple] -> [BondAsTuple]
+filterTo d = filter (\t -> tupleDate t < d)
+
+tupleDate :: BondAsTuple -> Day
+tupleDate (d, _, _, _, _, _) = d

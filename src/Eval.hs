@@ -1,6 +1,7 @@
 module Eval (eval) where
 
 import Control.Monad.Cont (MonadIO(liftIO))
+import Data.Time.Calendar (Day, diffDays)
 
 import Common
 import Sugar
@@ -32,19 +33,32 @@ eval (PortCashflow (conds, var)) = do
             return True
         Nothing -> return False
 
--- eval (Detail (conds, bond)) = do
---     printBnd "Detail for Bond"
---     b <- convertCond conds bond
---     case b of
---         Just b' -> do 
---             getBondDetail bd from
---             printBondDetail b'
---             return True
---         Nothing -> return False
+eval (Detail (conds, bond)) = do
+    printBnd "Detail for Bond"
+    b <- convertCond conds bond
+    case b of
+        Just b' -> do 
+            det <- getBondDetail b'
+            printBondDetail det
+            return True
+        Nothing -> return False
 
 eval _ = return False
 
--- getBondDetail :: MonadBnd m => Bond -> Day -> m ()
+getBondDetail :: MonadBnd m => Bond -> m (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Double)
+getBondDetail b = do
+    d <- getDate
+    let bd = sortByDay $ bondAsList Nothing b
+    let after = filterFrom d bd
+    let before = filterTo d bd
+    let nextDate = if null after then Nothing else Just (tupleDate $ head after)
+    let maturityDate = if null after then Nothing else Just (tupleDate $ last after)
+    let prevDate = if null before then Nothing else Just (tupleDate $ last before)
+    let daysToNext = case nextDate of
+                        Nothing -> 0
+                        Just nd -> diffDays nd d
+    let nominal = sum $ map (\(_, _, a, _, _, _) -> a) bd
+    return (d, maturityDate, prevDate, nextDate, daysToNext, nominal)
 
 evalPort :: MonadBnd m => [Cond] -> [(Int, Var)] -> m [(Var, Bond)]
 evalPort _ [] = return []
