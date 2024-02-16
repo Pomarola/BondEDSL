@@ -2,7 +2,6 @@ module Eval (eval) where
 
 import Control.Monad.Cont (MonadIO(liftIO))
 import Data.Time.Calendar (Day, diffDays)
-
 import Common
 import Sugar
 import MonadBnd
@@ -45,7 +44,7 @@ eval (Detail (conds, bond)) = do
 
 eval _ = return False
 
-getBondDetail :: MonadBnd m => Bond -> m (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Double)
+getBondDetail :: MonadBnd m => Bond -> m (Day, Maybe Day, Maybe Day, Maybe Day, Integer, [(Double, Currency)])
 getBondDetail b = do
     d <- getDate
     let bd = sortByDay $ bondAsList Nothing b
@@ -57,8 +56,20 @@ getBondDetail b = do
     let daysToNext = case nextDate of
                         Nothing -> 0
                         Just nd -> diffDays nd d
-    let nominal = sum $ map (\(_, _, a, _, _, _) -> a) bd
+    let nominal = getAmort bd
     return (d, maturityDate, prevDate, nextDate, daysToNext, nominal)
+    
+getAmort :: [BondAsTuple] -> [(Double, Currency)]
+getAmort bonds = sumAmort bonds []
+
+sumAmort :: [BondAsTuple] -> [(Double, Currency)] -> [(Double, Currency)]
+sumAmort [] acc = acc
+sumAmort ((_, _, _, _, None, _):bs) acc = sumAmort bs acc
+sumAmort ((_, _, _, a, c, _):bs) acc = sumAmort bs (addAmort (a, c) acc)
+
+addAmort :: (Double, Currency) -> [(Double, Currency)] -> [(Double, Currency)]
+addAmort (a, c) [] = [(a, c)]
+addAmort (a, c) ((a', c'):as) = if c == c' then (a + a', c) : as else (a', c') : addAmort (a, c) as
 
 evalPort :: MonadBnd m => [Cond] -> [(Int, Var)] -> m [(Var, Bond)]
 evalPort _ [] = return []
