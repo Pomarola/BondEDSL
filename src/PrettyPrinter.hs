@@ -19,10 +19,10 @@ printPortfolioCashFlow cfs = do
     let entries = map (\(d, v, a, r, c, s) -> [dateToString d, varToString v, c, show a, show r, show (a + r), scalersToString s]) cfs
     printBnd $ render $ hsep 2 left (map (vcat left . map text) (headers : entries))
 
-printBondDetail :: MonadBnd m => (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Maybe (Double, Currency), [(Double, Currency)], [(Double, Currency)], Maybe (Double, Currency), [(Double, Currency)], Maybe Double) -> m ()
-printBondDetail (sd, md, lc, nc, dtn, sp, nv, rv, ai, tv, par) = do
-    let headers = ["Supposed Date", "Maturity Date", "Last Coupon", "Next Coupon", "Days to Next Coupon", "Supposed Price", "Nominal Value", "Residual Value", "Accrued Interest", "Technical Value", "Parity"]
-    let entries = [[dateToString sd, maybeDateToString md, maybeDateToString lc, maybeDateToString nc, show dtn, maybePayToString sp, valueToString nv, valueToString rv, maybePayToString ai, valueToString tv, parityToString par]]
+printBondDetail :: MonadBnd m => (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Int, Maybe (Double, Currency), [(Double, Currency)], [(Double, Currency)], Maybe (Double, Currency), [(Double, Currency)], Maybe Double) -> m ()
+printBondDetail (sd, md, lc, nc, dtn, remp, sp, nv, rv, ai, tv, par) = do
+    let headers = ["Supposed Date", "Maturity Date", "Last Coupon", "Next Coupon", "Days to Next Coupon", "Remaining Payments", "Supposed Price", "Nominal Value", "Residual Value", "Accrued Interest", "Technical Value", "Parity"]
+    let entries = [[dateToString sd, maybeDateToString md, maybeDateToString lc, maybeDateToString nc, show dtn, show remp, maybePayToString sp, valueToString nv, valueToString rv, maybePayToString ai, valueToString tv, parityToString par]]
     printBnd $ render $ hsep 2 left (map (vcat left . map text) (headers : entries))
 
 parityToString :: Maybe Double -> String

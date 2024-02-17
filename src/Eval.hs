@@ -44,7 +44,7 @@ eval (Detail (conds, bond)) = do
 
 eval _ = return False
 
-getBondDetail :: MonadBnd m => Bond -> m (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Maybe (Double, Currency), [(Double, Currency)], [(Double, Currency)], Maybe (Double, Currency), [(Double, Currency)], Maybe Double)
+getBondDetail :: MonadBnd m => Bond -> m (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Int, Maybe (Double, Currency), [(Double, Currency)], [(Double, Currency)], Maybe (Double, Currency), [(Double, Currency)], Maybe Double)
 getBondDetail b = do
     d <- getDate
     p <- getPrice
@@ -57,6 +57,7 @@ getBondDetail b = do
     let daysToNext = case nextDate of
                         Nothing -> 0
                         Just nd -> diffDays nd d
+    let remainingPayments = length after
     let nominal = getValue bd
     let residual = getValue after
     let accruedInterest = if null after then Nothing else getInterest ((\(_, _, r, _, c, _) -> (r, c)) $ head after) d prevDate nextDate
@@ -68,7 +69,7 @@ getBondDetail b = do
                     Just (p', c) -> case findMatchingCurrency c technical of
                                     Just (tv, _) -> Just (p' / tv)
                                     Nothing -> Nothing
-    return (d, maturityDate, prevDate, nextDate, daysToNext, p, nominal, residual, accruedInterest, technical, parity)
+    return (d, maturityDate, prevDate, nextDate, daysToNext, remainingPayments, p, nominal, residual, accruedInterest, technical, parity)
 
 findMatchingCurrency :: Currency -> [(Double, Currency)] -> Maybe (Double, Currency)
 findMatchingCurrency _ [] = Nothing
