@@ -16,7 +16,7 @@ data Frequency = Annual | SemiAnnual | Quarterly | Monthly
 data Scaler = Mult Double | CER Double | DolarLinked Double
     deriving Show
 
-data Cond = BCCER Double | BCTC Double | Date Day | CV Double | VN Int | Today               -- CV seria current value, date el dia que queremos sup, bccer cer acutal y bctc tipocambio actual
+data Cond = BCCER Double | BCTC Double | Date Day | CV Double Currency | VN Int | Today               -- CV seria current value, date el dia que queremos sup, bccer cer acutal y bctc tipocambio actual
     deriving Show
 
 data DefOrExp = Def Var SugarBond | Eval Exp | Portfolio Var [(Int, Var)]
@@ -78,10 +78,10 @@ sortByDay :: [BondAsTuple] -> [BondAsTuple]
 sortByDay = sortBy (compare `on` tupleDate)
 
 filterFrom :: Day -> [BondAsTuple] -> [BondAsTuple]
-filterFrom d = filter (\t -> tupleDate t >= d)
+filterFrom d = filter (\t -> tupleDate t > d)
 
 filterTo :: Day -> [BondAsTuple] -> [BondAsTuple]
-filterTo d = filter (\t -> tupleDate t < d)
+filterTo d = filter (\t -> tupleDate t <= d)
 
 tupleDate :: BondAsTuple -> Day
 tupleDate (d, _, _, _, _, _) = d

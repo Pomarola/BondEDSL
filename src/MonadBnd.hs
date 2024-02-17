@@ -11,6 +11,7 @@ module MonadBnd (
   setDate,
   getDate,
   setPrice,
+  unsetPrice,
   getPrice,
   printBnd,
   printInlineBnd,
@@ -62,10 +63,13 @@ setDate d = modify (\s-> s { currentDate = d })
 getDate :: MonadBnd m => m Day
 getDate = gets currentDate
 
-setPrice :: MonadBnd m => Double -> m ()
-setPrice b = modify (\s-> s { currentPrice = b })
+setPrice :: MonadBnd m => (Double, Currency) -> m ()
+setPrice b = modify (\s-> s { currentPrice = Just b })
 
-getPrice :: MonadBnd m => m Double
+unsetPrice :: MonadBnd m => m ()
+unsetPrice = modify (\s-> s { currentPrice = Nothing })
+
+getPrice :: MonadBnd m => m (Maybe (Double, Currency))
 getPrice = gets currentPrice
 
 printBnd :: MonadBnd m => String -> m ()

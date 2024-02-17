@@ -19,29 +19,37 @@ printPortfolioCashFlow cfs = do
     let entries = map (\(d, v, a, r, c, s) -> [dateToString d, varToString v, show c, show a, show r, show (a + r), scalersToString s]) cfs
     printBnd $ render $ hsep 2 left (map (vcat left . map text) (headers : entries))
 
-printBondDetail :: MonadBnd m => (Day, Maybe Day, Maybe Day, Maybe Day, Integer, [(Double, Currency)]) -> m ()
-printBondDetail (sd, md, lc, nc, dtn, nv) = do
-    let headers = ["Supposed Date", "Maturity Date", "Last Coupon", "Next Coupon", "Days to Next Coupon", "Nominal Value"]
-    let entries = [[dateToString sd, maybeDateToString md, maybeDateToString lc, maybeDateToString nc, show dtn, amortToString nv]]
+printBondDetail :: MonadBnd m => (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Maybe (Double, Currency), [(Double, Currency)], [(Double, Currency)], Maybe (Double, Currency), [(Double, Currency)], Maybe Double) -> m ()
+printBondDetail (sd, md, lc, nc, dtn, sp, nv, rv, ai, tv, par) = do
+    let headers = ["Supposed Date", "Maturity Date", "Last Coupon", "Next Coupon", "Days to Next Coupon", "Supposed Price", "Nominal Value", "Residual Value", "Accrued Interest", "Technical Value", "Parity"]
+    let entries = [[dateToString sd, maybeDateToString md, maybeDateToString lc, maybeDateToString nc, show dtn, maybePayToString sp, valueToString nv, valueToString rv, maybePayToString ai, valueToString tv, parityToString par]]
     printBnd $ render $ hsep 2 left (map (vcat left . map text) (headers : entries))
 
-amortToString :: [(Double, Currency)] -> String
-amortToString [] = ""
-amortToString [(a, c)] = show a ++ " " ++ show c
-amortToString ((a, c):xs) = show a ++ " " ++ show c ++ ", " ++ amortToString xs
+parityToString :: Maybe Double -> String
+parityToString Nothing = "N/A"
+parityToString (Just p) = show (p * 100) ++ " %"
+
+maybePayToString :: Maybe (Double, Currency) -> String
+maybePayToString Nothing = "N/A"
+maybePayToString (Just (a, c)) = show a ++ " " ++ show c
+
+valueToString :: [(Double, Currency)] -> String
+valueToString [] = "N/A"
+valueToString [(a, c)] = show a ++ " " ++ show c
+valueToString ((a, c):xs) = show a ++ " " ++ show c ++ ", " ++ valueToString xs
     
 maybeDateToString :: Maybe Day -> String
-maybeDateToString Nothing = "-"
+maybeDateToString Nothing = "N/A"
 maybeDateToString (Just d) = dateToString d
 
 dateToString :: Day -> String
 dateToString = formatTime defaultTimeLocale "%d/%m/%Y"
 
 scalersToString :: [Scaler] -> String
-scalersToString [] = ""
+scalersToString [] = "N/A"
 scalersToString [x] = show x
 scalersToString (x:xs) = show x ++ ", " ++ scalersToString xs
 
 varToString :: Maybe Var -> String
-varToString Nothing = "-"
+varToString Nothing = "N/A"
 varToString (Just v) = v

@@ -92,7 +92,7 @@ Conds           : Cond ',' Conds                                { $1 : $3 }
 Cond            :: {Cond}
                 : BCRACER DOUBLE                                { BCCER $2 }
                 | BCRATC DOUBLE                                 { BCTC $2 }
-                | CURRENT DOUBLE                                { CV $2 }
+                | CURRENT DOUBLE CURRENCY                       { CV $2 $3 }
                 | DATE Date                                     { Date $2 }
                 | VN INT                                        { VN $2 }
                 | TODAY                                         { Today }
