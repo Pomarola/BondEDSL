@@ -64,19 +64,19 @@ Defs            : Def Defs                                      { $1 : $2 }
                 |                                               { [] }
                 
 Exp             :: {Exp}
-                : PRINT CondBond                                { Print $2 }
-                | YIELD CondBond                                { Yield $2 }
-                | PARITY CondBond                               { Parity $2 }
-                | DETAIL CondBond                               { Detail $2 }
-                | CASHFLOW CondBond                             { Cashflow $2 }
-                | PORTCASHFLOW CondVar                          { PortCashflow $2 }
+                : PRINT SupBond                                 { Print $2 }
+                | YIELD SupBond                                 { Yield $2 }
+                | PARITY SupBond                                { Parity $2 }
+                | DETAIL SupBond                                { Detail $2 }
+                | CASHFLOW SupBond                              { Cashflow $2 }
+                | PORTCASHFLOW SupPort                          { PortCashflow $2 }
 
-CondVar         : VAR                                           { ([],$1) }
-                | SUPPOSE '[' Conds ']' VAR                     { ($3,$5) }
+SupPort         : VAR                                           { ([],$1) }
+                | SUPPOSE '[' CondsPort ']' VAR                 { ($3,$5) }
 
-CondBond        :: {CondBond}
+SupBond         :: {CondBond}
                 : Bond                                          { ([],$1) }
-                | SUPPOSE '[' Conds ']' Bond                    { ($3,$5) }
+                | SUPPOSE '[' CondsBond ']' Bond                { ($3,$5) }
 
 Def             : DEF VAR '=' Bond                              { Def $2 $4 } 
                 | PORTFOLIO VAR '=' '[' Vars ']'                { Portfolio $2 $5 }
@@ -85,16 +85,28 @@ Vars            : INT VAR ',' Vars                              { ($1,$2) : $4 }
                 | INT VAR                                       { [($1,$2)] }
                 |                                               { [] }
 
-Conds           : Cond ',' Conds                                { $1 : $3 }
-                | Cond                                          { [$1] }
+CondsBond       :: {[Cond]}
+                : CondBond ',' CondsBond                        { $1 : $3 }
+                | CondBond                                      { [$1] }
                 |                                               { [] }
 
-Cond            :: {Cond}
+CondsPort       :: {[Cond]}
+                : CondPort ',' CondsPort                        { $1 : $3 }
+                | CondPort                                      { [$1] }
+                |                                               { [] }
+
+CondBond        :: {Cond}
                 : BCRACER DOUBLE                                { BCCER $2 }
                 | BCRATC DOUBLE                                 { BCTC $2 }
                 | CURRENT DOUBLE CURRENCY                       { CV $2 $3 }
                 | DATE Date                                     { Date $2 }
                 | VN INT                                        { VN $2 }
+                | TODAY                                         { Today }
+                
+CondPort        :: {Cond}
+                : BCRACER DOUBLE                                { BCCER $2 }
+                | BCRATC DOUBLE                                 { BCTC $2 }
+                | DATE Date                                     { Date $2 }
                 | TODAY                                         { Today }
 
 Bond            :: {SugarBond}
@@ -179,7 +191,7 @@ data Token = TEquals
                 | TRent
                 | TAmort
                 | TZero
-                | TCurrency Currency
+                | TCurrency String
                 | TDouble Double
                 | TInt Int
                 | TCer
@@ -205,6 +217,10 @@ lexer cont s = case s of
                 ('/':cs) -> cont TSlash cs
                 (',':cs) -> cont TComma cs
                 ('&':cs) -> cont TAnd cs
+                ('$':c:cs)
+                        | isAlpha c -> lexCurrency (c:cs)
+                        | otherwise -> \line -> Failed $ "Linea "++(show line)++": '$' encontrado pero no se pudo reconocer ninguna moneda"
+
                 unknown -> \line -> Failed $ 
                         "Linea "++(show line)++": No se puede reconocer "++(show $ take 10 unknown)++ "..."
                 where   
@@ -232,10 +248,6 @@ lexer cont s = case s of
                                 ("zero",rest) -> cont TZero rest
                                 ("CER",rest) -> cont TCer rest
                                 ("DL",rest) -> cont TDl rest
-                                ("USD",rest) -> cont (TCurrency USD) rest
-                                ("ARS",rest) -> cont (TCurrency ARS) rest
-                                ("BTC",rest) -> cont (TCurrency BTC) rest
-                                ("ETH",rest) -> cont (TCurrency ETH) rest
                                 ("ANNUAL",rest) -> cont (TFreq Annual) rest
                                 ("SEMIANNUAL",rest) -> cont (TFreq SemiAnnual) rest
                                 ("QUARTERLY",rest) -> cont (TFreq Quarterly) rest
@@ -246,6 +258,9 @@ lexer cont s = case s of
                                         ('.':cs) -> let (num',rest') = span isDigit cs
                                                 in cont (TDouble (read (num ++ "." ++ num'))) rest'
                                         _ -> cont (TInt (read num)) rest
+                        lexCurrency cs = let (curr,rest) = span isAlphaNum cs 
+                                in cont (TCurrency curr) rest
+
                                            
 defs_parse s = parseDefs s 1
 def_or_exp_parse s = parseDefOrExp s 1

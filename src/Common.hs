@@ -6,9 +6,7 @@ import Data.List (sortBy)
 import Data.Function (on)
 
 type Var = String
-
-data Currency = USD | ARS | EUR | BTC | ETH | None-- por ahi deberia hacer un tipe check para que no se puedan sumar cosas de distintas monedas
-    deriving (Eq, Show)
+type Currency = String
 
 data Frequency = Annual | SemiAnnual | Quarterly | Monthly
     deriving (Eq, Show)
@@ -69,7 +67,7 @@ bondAsList Nothing = bondAsList' [] Nothing
 bondAsList v = bondAsList' [] v
 
 bondAsList' :: [Scaler] -> Maybe Var -> Bond -> [BondAsTuple]
-bondAsList' xs v (At d PZero) = [(d, v, 0, 0, None, xs)]
+bondAsList' xs v (At d PZero) = [(d, v, 0, 0, "N/A", xs)]
 bondAsList' xs v (At d (Pay a r c)) = [(d, v, a, r, c, xs)]
 bondAsList' xs v (And b1 b2) = bondAsList' xs v b1 ++ bondAsList' xs v b2
 bondAsList' xs v (Scale s b) = bondAsList' (s : xs) v b 

@@ -83,7 +83,7 @@ getValue bonds = sumValue bonds []
 
 sumValue :: [BondAsTuple] -> [(Double, Currency)] -> [(Double, Currency)]
 sumValue [] acc = acc
-sumValue ((_, _, _, _, None, _):bs) acc = sumValue bs acc
+sumValue ((_, _, 0, 0, _, _):bs) acc = sumValue bs acc
 sumValue ((_, _, _, a, c, _):bs) acc = sumValue bs (addToAccum (a, c) acc)
 
 addToAccum :: (Double, Currency) -> [(Double, Currency)] -> [(Double, Currency)]

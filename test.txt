@@ -1,3 +1,59 @@
 portcashflow suppose [DATE 10/10/2011, BCCER 2.0] myPort3
 portcashflow suppose [TODAY] myPort3
 portcashflow myPort3
+
+BC> detail suppose [PRICE 50.0 ARS, DATE 10/12/2011] g
+Detail for Bond
+Supposed Date        10/12/2011
+Maturity Date        10/12/2019
+Last Coupon          10/12/2011
+Next Coupon          10/12/2012
+Days to Next Coupon  366
+Supposed Price       50.0 ARS
+Nominal Value        25.0 ARS, 45.0 USD
+Residual Value       45.0 USD
+Accrued Interest     0.0 USD
+Technical Value      45.0 USD
+Parity               N/A
+
+BC> detail suppose [PRICE 50.0 USD, DATE 10/12/2011] g
+Detail for Bond
+Supposed Date        10/12/2011
+Maturity Date        10/12/2019
+Last Coupon          10/12/2011
+Next Coupon          10/12/2012
+Days to Next Coupon  366
+Supposed Price       50.0 USD
+Nominal Value        25.0 ARS, 45.0 USD
+Residual Value       45.0 USD
+Accrued Interest     0.0 USD
+Technical Value      45.0 USD
+Parity               111.11111111111111 %
+
+BC> detail suppose [PRICE 50.0 USD, DATE 10/11/2012] g
+Detail for Bond
+Supposed Date        10/11/2012
+Maturity Date        10/12/2019
+Last Coupon          10/12/2011
+Next Coupon          10/12/2012
+Days to Next Coupon  30
+Supposed Price       50.0 USD
+Nominal Value        25.0 ARS, 45.0 USD
+Residual Value       45.0 USD
+Accrued Interest     0.0 USD
+Technical Value      45.0 USD
+Parity               111.11111111111111 %
+
+BC> detail suppose [PRICE 50.0 USD, DATE 10/11/2018] g
+Detail for Bond
+Supposed Date        10/11/2018
+Maturity Date        10/12/2019
+Last Coupon          10/12/2012
+Next Coupon          10/12/2019
+Days to Next Coupon  395
+Supposed Price       50.0 USD
+Nominal Value        25.0 ARS, 45.0 USD
+Residual Value       25.0 USD
+Accrued Interest     12.681924882629108 USD
+Technical Value      37.681924882629104 USD
+Parity               132.68961220993617 %

@@ -10,13 +10,13 @@ import MonadBnd
 printBondCashFlow :: MonadBnd m => [BondAsTuple] -> m ()
 printBondCashFlow cf = do
     let headers = ["Date", "Currency", "Amort", "Rent", "Total", "Scalers"]
-    let entries = map (\(d, _, a, r, c, s) -> [dateToString d, show c, show a, show r, show (a + r), scalersToString s]) cf
+    let entries = map (\(d, _, a, r, c, s) -> [dateToString d, c, show a, show r, show (a + r), scalersToString s]) cf
     printBnd $ render $ hsep 2 left (map (vcat left . map text) (headers : entries))
 
 printPortfolioCashFlow :: MonadBnd m => [BondAsTuple] -> m ()
 printPortfolioCashFlow cfs = do
     let headers = ["Date", "Ticker", "Currency", "Amort", "Rent", "Total", "Scalers"]
-    let entries = map (\(d, v, a, r, c, s) -> [dateToString d, varToString v, show c, show a, show r, show (a + r), scalersToString s]) cfs
+    let entries = map (\(d, v, a, r, c, s) -> [dateToString d, varToString v, c, show a, show r, show (a + r), scalersToString s]) cfs
     printBnd $ render $ hsep 2 left (map (vcat left . map text) (headers : entries))
 
 printBondDetail :: MonadBnd m => (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Maybe (Double, Currency), [(Double, Currency)], [(Double, Currency)], Maybe (Double, Currency), [(Double, Currency)], Maybe Double) -> m ()
@@ -31,12 +31,12 @@ parityToString (Just p) = show (p * 100) ++ " %"
 
 maybePayToString :: Maybe (Double, Currency) -> String
 maybePayToString Nothing = "N/A"
-maybePayToString (Just (a, c)) = show a ++ " " ++ show c
+maybePayToString (Just (a, c)) = show a ++ " " ++ c
 
 valueToString :: [(Double, Currency)] -> String
 valueToString [] = "N/A"
-valueToString [(a, c)] = show a ++ " " ++ show c
-valueToString ((a, c):xs) = show a ++ " " ++ show c ++ ", " ++ valueToString xs
+valueToString [(a, c)] = show a ++ " " ++ c
+valueToString ((a, c):xs) = show a ++ " " ++ c ++ ", " ++ valueToString xs
     
 maybeDateToString :: Maybe Day -> String
 maybeDateToString Nothing = "N/A"
