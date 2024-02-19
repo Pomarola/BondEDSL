@@ -1,0 +1,17 @@
+def alp1 = at 9/7/2021 coupon 0.125% 1.0 $USD
+def alp2 = repeat 4 SEMIANNUAL 9/1/2022 coupon 0.25% 1.0 $USD
+def alp3 = at 9/1/2024 coupon 0.375% 1.0 $USD
+def alp4 = couponamort 1 SEMIANNUAL 9/7/2024 0.75% 0.04 1.0 $USD
+def alp5 = couponamort 6 SEMIANNUAL 9/1/2025 0.75% 0.08 0.96 $USD 
+def alp6 = couponamort 6 SEMIANNUAL 9/1/2028 1.75% 0.08 0.48 $USD 
+
+def al30 = scale 100.0 alp1 & alp2 & alp3 & alp4 & alp5
+
+def aep1 = at 9/7/2021 coupon 0.125% 1.0 $USD
+def aep2 = repeat 2 SEMIANNUAL 9/1/2022 coupon 1.0% 1.0 $USD
+def aep3 = repeat 2 SEMIANNUAL 9/1/2023 coupon 1.9375% 1.0 $USD
+def aep4 = repeat 2 SEMIANNUAL 9/1/2024 coupon 2.125% 1.0 $USD
+def aep5 = repeat 5 SEMIANNUAL 9/1/2025 coupon 2.5% 1.0 $USD
+def aep6 = couponamort 22 SEMIANNUAL 9/7/2027 5.0% 0.4545455 1.0 $USD
+
+def ae38 = scale 100.0 aep1 & aep2 & aep3 & aep4 & aep5 & aep6
