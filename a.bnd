@@ -10,6 +10,19 @@ def g = at 10/12/2011 rent 10.0 $ARS & at 10/12/2010 zero & at 10/12/2012 amort 
 
 def e = x & d 
 
+def a1 = couponamort 5 MONTHLY 10/2/2024 7.5% 10.0 100.0 $ARS 
+def a2 = couponbullet 5 SEMIANNUAL 10/3/2024 6.5% 100.0 $USD  
+
 portfolio myPort = [100 x, 200 d]
 portfolio myPort2 = [100 y, 200 d, 300 e]
 portfolio myPort3 = [100 w, 200 c, 300 e]
+portfolio myPortB = [200 a1, 300 a2, 100 g, 20 w]
+
+def alc125 = at 9/7/2021 coupon 0.125% 1.0 $USD
+def alc25 = repeat 4 SEMIANNUAL 9/1/2022 coupon 0.25% 1.0 $USD
+def alc375 = at 9/1/2024 coupon 0.375% 1.0 $USD
+def ala375 = couponamort 1 SEMIANNUAL 9/7/2024 0.75% 0.04 1.0 $USD
+def ala7 = couponamort 6 SEMIANNUAL 9/1/2025 0.75% 0.08 0.96 $USD 
+def ala8 = couponamort 6 SEMIANNUAL 9/1/2028 1.75% 0.08 0.48 $USD 
+
+def al30 = scale 100.0 alc125 & alc25 & alc375 & ala375 & ala7 & ala8

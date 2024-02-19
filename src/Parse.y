@@ -50,6 +50,10 @@ import Data.Time.Calendar (Day, fromGregorian)
         DL              { TDl }
         REPEAT          { TRepeat }
         FREQ            { TFreq $$ }
+        PERCENT         { TPercent $$ }
+        COUPONAMORT     { TCouponAmort }
+        COUPONBULLET    { TCouponBullet }
+        COUPON          { TCoupon }
 
     
 %right VAR
@@ -115,12 +119,15 @@ Bond            :: {SugarBond}
                 | VAR                                           { SVar $1 }
                 | SCALE Scaler Bond                             { SScale $2 $3 }
                 | REPEAT INT FREQ Date Payment                  { SRepeat $2 $3 $4 $5 }
+                | COUPONAMORT INT FREQ Date PERCENT DOUBLE DOUBLE CURRENCY  { SCouponAmort $2 $3 $4 $5 $6 $7 $8 }
+                | COUPONBULLET INT FREQ Date PERCENT DOUBLE CURRENCY         { SCouponBullet $2 $3 $4 $5 $6 $7 }
 
 Payment         :: {Payment}
                 : RENT DOUBLE AMORT DOUBLE CURRENCY             { Pay $2 $4 $5 }
                 | AMORT DOUBLE RENT DOUBLE CURRENCY             { Pay $4 $2 $5 }
                 | RENT DOUBLE CURRENCY                          { Pay $2 0 $3 }
                 | AMORT DOUBLE CURRENCY                         { Pay 0 $2 $3 }
+                | COUPON PERCENT DOUBLE CURRENCY                 { Pay ($2 * $3 / 100) 0 $4 }
                 | ZERO                                          { PZero }
 
 Scaler          :: {Scaler}
@@ -198,6 +205,10 @@ data Token = TEquals
                 | TDl
                 | TRepeat
                 | TFreq Frequency
+                | TPercent Double
+                | TCouponAmort
+                | TCouponBullet
+                | TCoupon
                 | TEOF
                 deriving Show
 
@@ -220,7 +231,6 @@ lexer cont s = case s of
                 ('$':c:cs)
                         | isAlpha c -> lexCurrency (c:cs)
                         | otherwise -> \line -> Failed $ "Linea "++(show line)++": '$' encontrado pero no se pudo reconocer ninguna moneda"
-
                 unknown -> \line -> Failed $ 
                         "Linea "++(show line)++": No se puede reconocer "++(show $ take 10 unknown)++ "..."
                 where   
@@ -228,6 +238,8 @@ lexer cont s = case s of
                                 ("portfolio",rest) -> cont TPortfolio rest
                                 ("def",rest) -> cont TDef rest
                                 ("repeat",rest) -> cont TRepeat rest
+                                ("couponbullet",rest) -> cont TCouponBullet rest
+                                ("couponamort",rest) -> cont TCouponAmort rest
                                 ("print",rest) -> cont TPrint rest
                                 ("yield",rest) -> cont TYield rest
                                 ("parity",rest) -> cont TParity rest
@@ -243,6 +255,7 @@ lexer cont s = case s of
                                 ("VN",rest) -> cont TVn rest
                                 ("at",rest) -> cont TAt rest
                                 ("scale",rest) -> cont TScale rest
+                                ("coupon",rest) -> cont TCoupon rest
                                 ("rent",rest) -> cont TRent rest
                                 ("amort",rest) -> cont TAmort rest
                                 ("zero",rest) -> cont TZero rest
@@ -255,8 +268,9 @@ lexer cont s = case s of
                                 (var,rest)   -> cont (TVar var) rest 
                         lexNum cs = let (num,rest) = span isDigit cs 
                                 in case rest of
-                                        ('.':cs) -> let (num',rest') = span isDigit cs
-                                                in cont (TDouble (read (num ++ "." ++ num'))) rest'
+                                        ('.':cs) -> case span isDigit cs of
+                                                (num','%':rest') -> cont (TPercent (read (num ++ "." ++ num'))) rest'
+                                                (num',rest') -> cont (TDouble (read (num ++ "." ++ num'))) rest'
                                         _ -> cont (TInt (read num)) rest
                         lexCurrency cs = let (curr,rest) = span isAlphaNum cs 
                                 in cont (TCurrency curr) rest

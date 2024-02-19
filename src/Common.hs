@@ -43,6 +43,8 @@ data SugarBond =
     | SScale Scaler SugarBond
     | SAt Day Payment
     | SRepeat Int Frequency Day Payment
+    | SCouponAmort Int Frequency Day Double Double Double Currency
+    | SCouponBullet Int Frequency Day Double Double Currency
     deriving Show
 
 data Bond =
@@ -60,6 +62,9 @@ scale = Scale
 at :: Day -> Payment -> Bond
 at = At
 
+pay :: Double -> Double -> Currency -> Payment
+pay = Pay
+
 type BondAsTuple = (Day, Maybe Var, Double, Double, Currency, [Scaler])
 
 bondAsList :: Maybe Var -> Bond -> [BondAsTuple]
@@ -68,7 +73,7 @@ bondAsList v = bondAsList' [] v
 
 bondAsList' :: [Scaler] -> Maybe Var -> Bond -> [BondAsTuple]
 bondAsList' xs v (At d PZero) = [(d, v, 0, 0, "N/A", xs)]
-bondAsList' xs v (At d (Pay a r c)) = [(d, v, a, r, c, xs)]
+bondAsList' xs v (At d (Pay r a c)) = [(d, v, r, a, c, xs)]
 bondAsList' xs v (And b1 b2) = bondAsList' xs v b1 ++ bondAsList' xs v b2
 bondAsList' xs v (Scale s b) = bondAsList' (s : xs) v b 
 
