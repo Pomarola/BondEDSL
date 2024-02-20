@@ -10,7 +10,9 @@ import State
 
 eval :: MonadBnd m => Exp -> m Bool
 eval (Cashflow (conds, bond)) = do
-    printBnd "Cashflow for Bond"
+    case bond of
+        SVar name -> printBnd ("Cashflow for Bond " ++ name) 
+        _ -> printBnd "Cashflow"
     b <- convertCond conds bond
     case b of
         Just b' -> do
@@ -21,7 +23,7 @@ eval (Cashflow (conds, bond)) = do
         Nothing -> return False
 
 eval (PortCashflow (conds, var)) = do
-    printBnd $ "Cashflow for portfolio" ++ var
+    printBnd $ "Cashflow for portfolio " ++ var
     p <- lookupPortfolio var
     case p of
         Just ps -> do
@@ -33,7 +35,9 @@ eval (PortCashflow (conds, var)) = do
         Nothing -> return False
 
 eval (Detail (conds, bond)) = do
-    printBnd "Detail for Bond"
+    case bond of
+        SVar name -> printBnd ("Detail for Bond " ++ name) 
+        _ -> printBnd "Detail View"
     b <- convertCond conds bond
     case b of
         Just b' -> do
