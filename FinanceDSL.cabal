@@ -25,7 +25,7 @@ source-repository head
 
 library
   exposed-modules:
-      Common
+      Bond
       Errors
       Eval
       MonadBnd

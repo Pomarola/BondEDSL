@@ -4,7 +4,7 @@ import Text.PrettyPrint.Boxes ( text, hsep, left, render, vcat )
 import Data.Time.Calendar ( Day )
 import Data.Time.Format ( defaultTimeLocale, formatTime )
 import Text.Printf ( printf )
-import Common
+import Bond
 import MonadBnd
 
 
@@ -20,7 +20,7 @@ printPortfolioCashFlow cfs = do
     let entries = map (\(d, v, r, a, c, s) -> [dateToString d, varToString v, c, showDouble r, showDouble a, showDouble (a + r), scalersToString s]) cfs
     printBnd $ verticalTable (headers : entries)
 
-printBondDetail :: MonadBnd m => (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Int, Maybe (Double, Currency), [(Double, Currency)], [(Double, Currency)], Maybe (Double, Currency), [(Double, Currency)], Maybe Double) -> m ()
+printBondDetail :: MonadBnd m => (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Int, Maybe Money, [Money], [Money], Maybe Money, [Money], Maybe Double) -> m ()
 printBondDetail (sd, md, lc, nc, dtn, remp, sp, nv, rv, ai, tv, par) = do
     let headers = ["Supposed Date", "Maturity Date", "Last Coupon", "Next Coupon", "Days to Next Coupon", "Remaining Payments", "Supposed Price", "Nominal Value", "Residual Value", "Accrued Interest", "Technical Value", "Parity"]
     let entries = [[dateToString sd, maybeDateToString md, maybeDateToString lc, maybeDateToString nc, show dtn, show remp, maybePayToString sp, valueToString nv, valueToString rv, maybePayToString ai, valueToString tv, parityToString par]]
@@ -37,11 +37,11 @@ parityToString :: Maybe Double -> String
 parityToString Nothing = "N/A"
 parityToString (Just p) = showDouble (p * 100) ++ " %"
 
-maybePayToString :: Maybe (Double, Currency) -> String
+maybePayToString :: Maybe Money -> String
 maybePayToString Nothing = "N/A"
 maybePayToString (Just (a, c)) = showDouble a ++ " " ++ c
 
-valueToString :: [(Double, Currency)] -> String
+valueToString :: [Money] -> String
 valueToString [] = "N/A"
 valueToString [(a, c)] = showDouble a ++ " " ++ c
 valueToString ((a, c):xs) = showDouble a ++ " " ++ c ++ ", " ++ valueToString xs

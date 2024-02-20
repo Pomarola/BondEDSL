@@ -25,7 +25,7 @@ import System.IO ( stderr, hPrint )
 import Data.Time.Calendar (Day)
 
 import State
-import Common
+import Bond
 import Errors ( Error(..) )
 
 class (MonadIO m, MonadState State m, MonadError Error m) => MonadBnd m where
@@ -63,13 +63,13 @@ setDate d = modify (\s-> s { currentDate = d })
 getDate :: MonadBnd m => m Day
 getDate = gets currentDate
 
-setPrice :: MonadBnd m => (Double, Currency) -> m ()
+setPrice :: MonadBnd m => Money -> m ()
 setPrice b = modify (\s-> s { currentPrice = Just b })
 
 unsetPrice :: MonadBnd m => m ()
 unsetPrice = modify (\s-> s { currentPrice = Nothing })
 
-getPrice :: MonadBnd m => m (Maybe (Double, Currency))
+getPrice :: MonadBnd m => m (Maybe Money)
 getPrice = gets currentPrice
 
 printBnd :: MonadBnd m => String -> m ()

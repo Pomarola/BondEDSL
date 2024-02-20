@@ -1,4 +1,4 @@
-module Common where
+module Bond where
 
 import Prelude hiding (and)
 import Data.Time.Calendar (Day)
@@ -7,44 +7,12 @@ import Data.Function (on)
 
 type Var = String
 type Currency = String
-
-data Frequency = Annual | SemiAnnual | Quarterly | Monthly
-    deriving (Eq, Show)
+type Money = (Double, Currency)
 
 data Scaler = Mult Double | CER Double | DolarLinked Double
     deriving Show
 
-data Cond = BCCER Double | BCTC Double | Date Day | CV Double Currency | VN Int | Today               -- CV seria current value, date el dia que queremos sup, bccer cer acutal y bctc tipocambio actual
-    deriving Show
-
-data DefOrExp = Def Var SugarBond | Eval Exp | Portfolio Var [(Int, Var)]
-    deriving Show
-
-data Exp =
-    Print CondBond      -- Uno que printee el contrato y otro que printee el cash flow?
-    | Yield CondBond
-    | Parity CondBond
-    | Detail CondBond
-    | Cashflow CondBond
-    | PortCashflow ([Cond], Var)
-    
-    -- | Duration CondBond TIR
-
-    deriving Show
-
-type CondBond = ([Cond], SugarBond)
-
 data Payment = PZero | Pay Double Double Currency
-    deriving Show
-
-data SugarBond =
-    SVar Var
-    | SAnd SugarBond SugarBond
-    | SScale Scaler SugarBond
-    | SAt Day Payment
-    | SRepeat Int Frequency Day Payment
-    | SCouponAmort Int Frequency Day Double Double Double Currency
-    | SCouponBullet Int Frequency Day Double Double Currency
     deriving Show
 
 data Bond =

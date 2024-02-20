@@ -10,8 +10,8 @@ def g = at 10/12/2011 rent 10.0 $ARS & at 10/12/2010 zero & at 10/12/2012 amort 
 
 def e = x & d 
 
-def a1 = couponamort 5 MONTHLY 10/2/2024 7.5% 10.0 100.0 $ARS 
-def a2 = couponbullet 5 SEMIANNUAL 10/3/2024 6.5% 100.0 $USD  
+def a1 = repeat 5 MONTHLY 10/2/2024 interest 7.5% amort 10.0 of 100.0 $ARS 
+def a2 = repeat 5 SEMIANNUAL 10/3/2024 interest 6.5% of 100.0 $USD  
 
 portfolio myPort = [100 x, 200 d]
 portfolio myPort2 = [100 y, 200 d, 300 e]

@@ -1,6 +1,7 @@
 {
 module Parse where
-import Common 
+import Sugar
+import Bond 
 import Data.Maybe
 import Data.Char
 import Data.Time.Calendar (Day, fromGregorian)
@@ -54,6 +55,8 @@ import Data.Time.Calendar (Day, fromGregorian)
         COUPONAMORT     { TCouponAmort }
         COUPONBULLET    { TCouponBullet }
         COUPON          { TCoupon }
+        OF              { TOf }
+        INTEREST        { TInterest }
 
     
 %right VAR
@@ -118,16 +121,22 @@ Bond            :: {SugarBond}
                 | AT Date Payment                               { SAt $2 $3 }
                 | VAR                                           { SVar $1 }
                 | SCALE Scaler Bond                             { SScale $2 $3 }
-                | REPEAT INT FREQ Date Payment                  { SRepeat $2 $3 $4 $5 }
-                | COUPONAMORT INT FREQ Date PERCENT DOUBLE DOUBLE CURRENCY  { SCouponAmort $2 $3 $4 $5 $6 $7 $8 }
-                | COUPONBULLET INT FREQ Date PERCENT DOUBLE CURRENCY         { SCouponBullet $2 $3 $4 $5 $6 $7 }
+                | Iterate Payment                               { SRepeat $1 $2 }
+                | Iterate INTEREST PERCENT OF Base              { SCouponBullet $1 $3 $5 }
+                | Iterate INTEREST PERCENT AMORT DOUBLE OF Base { SCouponAmort $1 $3 $5 $7 }
+
+Iterate         :: {Iterator}
+                : REPEAT INT FREQ Date                          { ($2,$3,$4) }
+
+Base            :: {Money}
+                : DOUBLE CURRENCY                               { ($1,$2) }
 
 Payment         :: {Payment}
                 : RENT DOUBLE AMORT DOUBLE CURRENCY             { Pay $2 $4 $5 }
                 | AMORT DOUBLE RENT DOUBLE CURRENCY             { Pay $4 $2 $5 }
                 | RENT DOUBLE CURRENCY                          { Pay $2 0 $3 }
                 | AMORT DOUBLE CURRENCY                         { Pay 0 $2 $3 }
-                | COUPON PERCENT DOUBLE CURRENCY                 { Pay ($2 * $3 / 100) 0 $4 }
+                | COUPON PERCENT OF DOUBLE CURRENCY             { Pay ($2 * $4 / 100) 0 $5 }
                 | ZERO                                          { PZero }
 
 Scaler          :: {Scaler}
@@ -209,6 +218,8 @@ data Token = TEquals
                 | TCouponAmort
                 | TCouponBullet
                 | TCoupon
+                | TOf
+                | TInterest
                 | TEOF
                 deriving Show
 
@@ -258,6 +269,8 @@ lexer cont s = case s of
                                 ("coupon",rest) -> cont TCoupon rest
                                 ("rent",rest) -> cont TRent rest
                                 ("amort",rest) -> cont TAmort rest
+                                ("of",rest) -> cont TOf rest
+                                ("interest",rest) -> cont TInterest rest
                                 ("zero",rest) -> cont TZero rest
                                 ("CER",rest) -> cont TCer rest
                                 ("DL",rest) -> cont TDl rest

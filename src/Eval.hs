@@ -2,7 +2,7 @@ module Eval (eval) where
 
 import Control.Monad.Cont (MonadIO(liftIO))
 import Data.Time.Calendar (Day, diffDays)
-import Common
+import Bond
 import Sugar
 import MonadBnd
 import PrettyPrinter
@@ -48,7 +48,7 @@ eval (Detail (conds, bond)) = do
 
 eval _ = return False
 
-getBondDetail :: MonadBnd m => Bond -> m (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Int, Maybe (Double, Currency), [(Double, Currency)], [(Double, Currency)], Maybe (Double, Currency), [(Double, Currency)], Maybe Double)
+getBondDetail :: MonadBnd m => Bond -> m (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Int, Maybe Money, [Money], [Money], Maybe Money, [Money], Maybe Double)
 getBondDetail b = do
     d <- getDate
     p <- getPrice
@@ -75,23 +75,23 @@ getBondDetail b = do
                                     Nothing -> Nothing
     return (d, maturityDate, prevDate, nextDate, daysToNext, remainingPayments, p, nominal, residual, accruedInterest, technical, parity)
 
-findMatchingCurrency :: Currency -> [(Double, Currency)] -> Maybe (Double, Currency)
+findMatchingCurrency :: Currency -> [Money] -> Maybe Money
 findMatchingCurrency _ [] = Nothing
 findMatchingCurrency c ((v, c'):vs) = if c == c' then Just (v, c) else findMatchingCurrency c vs
 
-getInterest :: (Double, Currency) -> Day -> Maybe Day -> Maybe Day -> Maybe (Double, Currency)
+getInterest :: Money -> Day -> Maybe Day -> Maybe Day -> Maybe Money
 getInterest (r,c) d (Just pd) (Just nd) = Just (r * (fromIntegral (diffDays d pd) / fromIntegral (diffDays nd pd)), c)
 getInterest _ _ _ _ = Nothing
 
-getValue :: [BondAsTuple] -> [(Double, Currency)]
+getValue :: [BondAsTuple] -> [Money]
 getValue bonds = sumValue bonds []
 
-sumValue :: [BondAsTuple] -> [(Double, Currency)] -> [(Double, Currency)]
+sumValue :: [BondAsTuple] -> [Money] -> [Money]
 sumValue [] acc = acc
 sumValue ((_, _, 0, 0, _, _):bs) acc = sumValue bs acc
 sumValue ((_, _, _, a, c, _):bs) acc = sumValue bs (addToAccum (a, c) acc)
 
-addToAccum :: (Double, Currency) -> [(Double, Currency)] -> [(Double, Currency)]
+addToAccum :: Money -> [Money] -> [Money]
 addToAccum (a1, c1) [] = [(a1, c1)]
 addToAccum (a1, c1) ((a2, c2):as) = if c1 == c2 then (a1 + a2, c1) : as else (a2, c2) : addToAccum (a1, c1) as
 

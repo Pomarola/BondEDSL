@@ -2,7 +2,7 @@ module State (oldDate, todayDate, initState, State(..), Def, Port) where
 
 import Data.Time.Clock (getCurrentTime, utctDay)
 import Data.Time.Calendar (Day)
-import Common (Var, Bond, Currency)
+import Bond (Var, Bond, Money)
 
 type Def = (Var, Bond)
 type Port = (Var, [(Int, Var)])
@@ -10,7 +10,7 @@ type Port = (Var, [(Int, Var)])
 data State = State
   {
     env :: [Def], -- Entorno con variables globales y su valor
-    currentPrice :: Maybe (Double, Currency),
+    currentPrice :: Maybe Money,
     currentDate :: Day,
     porfolios :: [Port]
   }

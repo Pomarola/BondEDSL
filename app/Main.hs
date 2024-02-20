@@ -10,7 +10,6 @@ import System.IO ( hPutStrLn, stderr, hPrint )
 import Control.Monad.Catch (MonadMask)
 import System.Exit ( exitWith, ExitCode(ExitFailure) )
 
-import           Common
 import           Parse
 import           Sugar
 import           Eval
