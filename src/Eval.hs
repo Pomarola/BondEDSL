@@ -120,8 +120,8 @@ applyConds [] b = return b
 applyConds ((BCCER cer):cs) b = let b' = replaceScaler (CER cer) b in applyConds cs b'
 applyConds ((BCTC tc):cs) b = let b' = replaceScaler (DolarLinked tc) b in applyConds cs b'
 applyConds ((VN n):cs) b = applyConds cs (Scale (Mult (fromIntegral n)) b)
-applyConds ((CV v c):cs) b = do
-    setPrice (v, c)
+applyConds ((CV m):cs) b = do
+    setPrice m
     applyConds cs b
 applyConds ((Date d):cs) b = do
     setDate d

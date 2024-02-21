@@ -9,7 +9,7 @@ import MonadBnd
 data Frequency = Annual | SemiAnnual | Quarterly | Monthly
     deriving (Eq, Show)
 
-data Cond = BCCER Double | BCTC Double | Date Day | CV Double Currency | VN Int | Today               -- CV seria current value, date el dia que queremos sup, bccer cer acutal y bctc tipocambio actual
+data Cond = BCCER Double | BCTC Double | Date Day | CV Money | VN Int | Today               -- CV seria current value, date el dia que queremos sup, bccer cer acutal y bctc tipocambio actual
     deriving Show
 
 data DefOrExp = Def Var SugarBond | Eval Exp | Portfolio Var [(Int, Var)]

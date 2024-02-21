@@ -52,12 +52,8 @@ import Data.Time.Calendar (Day, fromGregorian)
         REPEAT          { TRepeat }
         FREQ            { TFreq $$ }
         PERCENT         { TPercent $$ }
-        COUPONAMORT     { TCouponAmort }
-        COUPONBULLET    { TCouponBullet }
-        COUPON          { TCoupon }
         OF              { TOf }
         INTEREST        { TInterest }
-
     
 %right VAR
 %left '=' 
@@ -105,7 +101,7 @@ CondsPort       :: {[Cond]}
 CondBond        :: {Cond}
                 : BCRACER DOUBLE                                { BCCER $2 }
                 | BCRATC DOUBLE                                 { BCTC $2 }
-                | CURRENT DOUBLE CURRENCY                       { CV $2 $3 }
+                | CURRENT Money                                 { CV $2 }
                 | DATE Date                                     { Date $2 }
                 | VN INT                                        { VN $2 }
                 | TODAY                                         { Today }
@@ -122,13 +118,14 @@ Bond            :: {SugarBond}
                 | VAR                                           { SVar $1 }
                 | SCALE Scaler Bond                             { SScale $2 $3 }
                 | Iterate Payment                               { SRepeat $1 $2 }
-                | Iterate INTEREST PERCENT OF Base              { SCouponBullet $1 $3 $5 }
-                | Iterate INTEREST PERCENT AMORT DOUBLE OF Base { SCouponAmort $1 $3 $5 $7 }
+                | Iterate INTEREST PERCENT OF Money              { SCouponBullet $1 $3 $5 }
+                | Iterate INTEREST PERCENT AMORT DOUBLE OF Money { SCouponAmort $1 $3 $5 $7 }
+                | Iterate AMORT DOUBLE INTEREST PERCENT OF Money { SCouponAmort $1 $5 $3 $7 }
 
 Iterate         :: {Iterator}
                 : REPEAT INT FREQ Date                          { ($2,$3,$4) }
 
-Base            :: {Money}
+Money           :: {Money}
                 : DOUBLE CURRENCY                               { ($1,$2) }
 
 Payment         :: {Payment}
@@ -136,7 +133,8 @@ Payment         :: {Payment}
                 | AMORT DOUBLE RENT DOUBLE CURRENCY             { Pay $4 $2 $5 }
                 | RENT DOUBLE CURRENCY                          { Pay $2 0 $3 }
                 | AMORT DOUBLE CURRENCY                         { Pay 0 $2 $3 }
-                | COUPON PERCENT OF DOUBLE CURRENCY             { Pay ($2 * $4 / 100) 0 $5 }
+                | RENT PERCENT OF DOUBLE CURRENCY               { Pay ($2 * $4 / 100) 0 $5 }
+                | AMORT PERCENT OF DOUBLE CURRENCY              { Pay 0 ($2 * $4 / 100) $5 }
                 | ZERO                                          { PZero }
 
 Scaler          :: {Scaler}
@@ -146,8 +144,6 @@ Scaler          :: {Scaler}
          
 Date            :: {Day}
                 : INT '/' INT '/' INT                           { fromGregorian (toInteger $5) $3 $1 }
-
-
 
 {
 
@@ -215,9 +211,6 @@ data Token = TEquals
                 | TRepeat
                 | TFreq Frequency
                 | TPercent Double
-                | TCouponAmort
-                | TCouponBullet
-                | TCoupon
                 | TOf
                 | TInterest
                 | TEOF
@@ -248,9 +241,6 @@ lexer cont s = case s of
                         lexVar cs = case (span isAlphaNum cs) of
                                 ("portfolio",rest) -> cont TPortfolio rest
                                 ("def",rest) -> cont TDef rest
-                                ("repeat",rest) -> cont TRepeat rest
-                                ("couponbullet",rest) -> cont TCouponBullet rest
-                                ("couponamort",rest) -> cont TCouponAmort rest
                                 ("print",rest) -> cont TPrint rest
                                 ("yield",rest) -> cont TYield rest
                                 ("parity",rest) -> cont TParity rest
@@ -264,14 +254,14 @@ lexer cont s = case s of
                                 ("PRICE",rest) -> cont TCurrent rest
                                 ("DATE",rest) -> cont TDate rest
                                 ("VN",rest) -> cont TVn rest
+                                ("zero",rest) -> cont TZero rest
                                 ("at",rest) -> cont TAt rest
-                                ("scale",rest) -> cont TScale rest
-                                ("coupon",rest) -> cont TCoupon rest
+                                ("repeat",rest) -> cont TRepeat rest
                                 ("rent",rest) -> cont TRent rest
                                 ("amort",rest) -> cont TAmort rest
-                                ("of",rest) -> cont TOf rest
                                 ("interest",rest) -> cont TInterest rest
-                                ("zero",rest) -> cont TZero rest
+                                ("of",rest) -> cont TOf rest
+                                ("scale",rest) -> cont TScale rest
                                 ("CER",rest) -> cont TCer rest
                                 ("DL",rest) -> cont TDl rest
                                 ("ANNUAL",rest) -> cont (TFreq Annual) rest
@@ -288,7 +278,6 @@ lexer cont s = case s of
                         lexCurrency cs = let (curr,rest) = span isAlphaNum cs 
                                 in cont (TCurrency curr) rest
 
-                                           
 defs_parse s = parseDefs s 1
 def_or_exp_parse s = parseDefOrExp s 1
 }
