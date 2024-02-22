@@ -16,7 +16,7 @@ data DefOrExp = Def Var SugarBond | Eval Exp | Portfolio Var [(Int, Var)]
     deriving Show
 
 data Exp =
-    Print CondBond      -- Uno que printee el contrato y otro que printee el cash flow?
+    Print CondBond
     | Dates CondBond
     | Values CondBond
     | Detail CondBond

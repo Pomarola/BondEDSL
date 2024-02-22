@@ -71,7 +71,16 @@ eval (Values (conds, bond)) = do
             return True
         Nothing -> return False
 
-eval _ = return False
+eval (Print (conds, bond)) = do
+    case bond of
+        SVar name -> printBnd ("Tuples for Bond " ++ name) 
+        _ -> printBnd "Tuple View"
+    b <- convertCond conds bond
+    case b of
+        Just b' -> do
+            printTuples $ sortedBond b'
+            return True
+        Nothing -> return False
 
 sortedBond :: Bond -> [BondAsTuple]
 sortedBond b = sortByDay $ bondAsList Nothing b

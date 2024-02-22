@@ -57,6 +57,8 @@ import Data.Time.Calendar (Day, fromGregorian)
     
 %right VAR
 %left '=' 
+%right SCALE
+%right '&'
 
 %%
 
@@ -114,6 +116,7 @@ CondPort        :: {Cond}
 
 Bond            :: {SugarBond}
                 : Bond '&' Bond                                 { SAnd $1 $3 }
+                | '(' Bond ')'                                  { $2 }
                 | AT Date Payment                               { SAt $2 $3 }
                 | VAR                                           { SVar $1 }
                 | SCALE Scaler Bond                             { SScale $2 $3 }
@@ -121,6 +124,7 @@ Bond            :: {SugarBond}
                 | Iterate INTEREST PERCENT OF Money              { SCouponBullet $1 $3 $5 }
                 | Iterate INTEREST PERCENT AMORT DOUBLE OF Money { SCouponAmort $1 $3 $5 $7 }
                 | Iterate AMORT DOUBLE INTEREST PERCENT OF Money { SCouponAmort $1 $5 $3 $7 }
+
 
 Iterate         :: {Iterator}
                 : REPEAT INT FREQ Date                          { ($2,$3,$4) }

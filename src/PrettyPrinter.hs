@@ -1,4 +1,4 @@
-module PrettyPrinter (printBondCashFlow, printPortfolioCashFlow, printBondDetail, printBondDates, printBondValues) where
+module PrettyPrinter (printBondCashFlow, printPortfolioCashFlow, printBondDetail, printBondDates, printBondValues, printTuples) where
 
 import Text.PrettyPrint.Boxes ( text, hsep, left, render, vcat )
 import Data.Time.Calendar ( Day )
@@ -32,6 +32,9 @@ printBondDates b = let (h, e) = generateDatesTable b
 printBondValues :: MonadBnd m => (Maybe Money, [Money], [Money], Maybe Money, [Money], Maybe Double) -> m ()
 printBondValues b = let (h, e) = generateValsTable b
                     in printBnd $ horizontalTable (h : e)
+
+printTuples :: MonadBnd m => [BondAsTuple] -> m ()
+printTuples b = printBnd $ show $ map (\(d, v, r, a, c, s) -> (dateToString d, varToString v, showDouble r, showDouble a, c, scalersToString s)) b
 
 generateValsTable :: (Maybe Money, [Money], [Money], Maybe Money, [Money], Maybe Double) -> ([String], [[String]])
 generateValsTable (sp, nv, rv, ai, tv, par) = (headers, entries)
