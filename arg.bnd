@@ -3,7 +3,7 @@ def alp2 = repeat 4 SEMIANNUAL 9/1/2022 rent 0.25% of 1.0 $USD
 def alp3 = at 9/1/2024 rent 0.375% of 1.0 $USD
 def alp4 = repeat 1 SEMIANNUAL 9/7/2024 interest 0.75% amort 0.04 of 1.0 $USD
 def alp5 = repeat 6 SEMIANNUAL 9/1/2025 interest 0.75% amort 0.08 of 0.96 $USD 
-def alp6 = repeat 6 SEMIANNUAL 9/1/2028 interest 1.75% amort 0.08 of 0.48 $USD 
+def alp6 = repeat 6 SEMIANNUAL 9/1/2028 interest 1.75% amort 0.08 of 0.48 $USD
 
 def al30 = scale 100.0 alp1 & alp2 & alp3 & alp4 & alp5 & alp6
 

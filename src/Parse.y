@@ -27,8 +27,8 @@ import Data.Time.Calendar (Day, fromGregorian)
         DEF             { TDef }    
         VAR             { TVar $$ }
         PRINT           { TPrint }
-        YIELD           { TYield }
-        PARITY          { TParity }
+        DATES           { TDates }
+        VALUES          { TValues }
         DETAIL          { TDetail }
         CASHFLOW        { TCashflow }
         PORTCASHFLOW    { TPortCashflow }
@@ -68,8 +68,8 @@ Defs            : Def Defs                                      { $1 : $2 }
                 
 Exp             :: {Exp}
                 : PRINT SupBond                                 { Print $2 }
-                | YIELD SupBond                                 { Yield $2 }
-                | PARITY SupBond                                { Parity $2 }
+                | DATES SupBond                                 { Dates $2 }
+                | VALUES SupBond                                { Values $2 }
                 | DETAIL SupBond                                { Detail $2 }
                 | CASHFLOW SupBond                              { Cashflow $2 }
                 | PORTCASHFLOW SupPort                          { PortCashflow $2 }
@@ -186,8 +186,8 @@ data Token = TEquals
                 | TDef
                 | TVar String
                 | TPrint
-                | TYield
-                | TParity
+                | TDates
+                | TValues
                 | TDetail
                 | TCashflow
                 | TPortCashflow
@@ -242,8 +242,8 @@ lexer cont s = case s of
                                 ("portfolio",rest) -> cont TPortfolio rest
                                 ("def",rest) -> cont TDef rest
                                 ("print",rest) -> cont TPrint rest
-                                ("yield",rest) -> cont TYield rest
-                                ("parity",rest) -> cont TParity rest
+                                ("dates",rest) -> cont TDates rest
+                                ("values",rest) -> cont TValues rest
                                 ("detail",rest) -> cont TDetail rest
                                 ("cashflow",rest) -> cont TCashflow rest
                                 ("portcashflow",rest) -> cont TPortCashflow rest

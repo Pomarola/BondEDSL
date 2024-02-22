@@ -1,4 +1,4 @@
-module PrettyPrinter (printBondCashFlow, printPortfolioCashFlow, printBondDetail) where 
+module PrettyPrinter (printBondCashFlow, printPortfolioCashFlow, printBondDetail, printBondDates, printBondValues) where
 
 import Text.PrettyPrint.Boxes ( text, hsep, left, render, vcat )
 import Data.Time.Calendar ( Day )
@@ -20,14 +20,31 @@ printPortfolioCashFlow cfs = do
     let entries = map (\(d, v, r, a, c, s) -> [dateToString d, varToString v, c, showDouble r, showDouble a, showDouble (a + r), scalersToString s]) cfs
     printBnd $ verticalTable (headers : entries)
 
-printBondDetail :: MonadBnd m => (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Int, Maybe Money, [Money], [Money], Maybe Money, [Money], Maybe Double) -> m ()
-printBondDetail (sd, md, lc, nc, dtn, remp, sp, nv, rv, ai, tv, par) = do
-    let headers = ["Supposed Date", "Maturity Date", "Last Coupon", "Next Coupon", "Days to Next Coupon", "Remaining Payments", "Supposed Price", "Nominal Value", "Residual Value", "Accrued Interest", "Technical Value", "Parity"]
-    let entries = [[dateToString sd, maybeDateToString md, maybeDateToString lc, maybeDateToString nc, show dtn, show remp, maybePayToString sp, valueToString nv, valueToString rv, maybePayToString ai, valueToString tv, parityToString par]]
-    printBnd $ horizontalTable (headers : entries)
+printBondDetail :: MonadBnd m => (Day, Maybe Day, Maybe Day, Maybe Day, Int, Int) -> (Maybe Money, [Money], [Money], Maybe Money, [Money], Maybe Double) -> m ()
+printBondDetail d v = let (h1, e1) = generateDatesTable d
+                          (h2, e2) = generateValsTable v
+                      in printBnd $ horizontalTable $ (h1 : e1) ++ (h2 : e2)
+
+printBondDates :: MonadBnd m => (Day, Maybe Day, Maybe Day, Maybe Day, Int, Int) -> m ()
+printBondDates b = let (h, e) = generateDatesTable b
+                    in printBnd $ horizontalTable (h : e)
+
+printBondValues :: MonadBnd m => (Maybe Money, [Money], [Money], Maybe Money, [Money], Maybe Double) -> m ()
+printBondValues b = let (h, e) = generateValsTable b
+                    in printBnd $ horizontalTable (h : e)
+
+generateValsTable :: (Maybe Money, [Money], [Money], Maybe Money, [Money], Maybe Double) -> ([String], [[String]])
+generateValsTable (sp, nv, rv, ai, tv, par) = (headers, entries)
+    where headers = ["Supposed Price", "Nominal Value", "Residual Value", "Accrued Interest", "Technical Value", "Parity"]
+          entries = [[maybePayToString sp, valueToString nv, valueToString rv, maybePayToString ai, valueToString tv, parityToString par]]
+
+generateDatesTable :: (Day, Maybe Day, Maybe Day, Maybe Day, Int, Int) -> ([String], [[String]])
+generateDatesTable (sd, md, lc, nc, dtn, remp) = (headers, entries)
+    where headers = ["Supposed Date", "Maturity Date", "Last Coupon", "Next Coupon", "Days to Next Coupon", "Remaining Payments"]
+          entries = [[dateToString sd, maybeDateToString md, maybeDateToString lc, maybeDateToString nc, show dtn, show remp]]
 
 horizontalTable :: [[String]] -> String
-horizontalTable list = render $ hsep 2 left (map (vcat left . map text) list)
+horizontalTable list = render $ hsep 5 left (map (vcat left . map text) list)
 
 verticalTable :: [[String]] -> String
 verticalTable list = render $ vcat left (map (hsep 10 left . map (text . align)) list)
@@ -45,7 +62,7 @@ valueToString :: [Money] -> String
 valueToString [] = "N/A"
 valueToString [(a, c)] = showDouble a ++ " " ++ c
 valueToString ((a, c):xs) = showDouble a ++ " " ++ c ++ ", " ++ valueToString xs
-    
+
 maybeDateToString :: Maybe Day -> String
 maybeDateToString Nothing = "N/A"
 maybeDateToString (Just d) = dateToString d

@@ -36,34 +36,70 @@ eval (PortCashflow (conds, var)) = do
 
 eval (Detail (conds, bond)) = do
     case bond of
-        SVar name -> printBnd ("Detail for Bond " ++ name) 
-        _ -> printBnd "Detail View"
+        SVar name -> printBnd ("Full Detail for Bond " ++ name) 
+        _ -> printBnd "Full Detail View"
     b <- convertCond conds bond
     case b of
         Just b' -> do
-            det <- getBondDetail b'
-            printBondDetail det
+            dates <- getBondDates $ sortedBond b'
+            vals <- getBondValues $ sortedBond b'
+            printBondDetail dates vals
+            return True
+        Nothing -> return False
+
+eval (Dates (conds, bond)) = do
+    case bond of
+        SVar name -> printBnd ("Dates for Bond " ++ name) 
+        _ -> printBnd "Dates View"
+    b <- convertCond conds bond
+    case b of
+        Just b' -> do
+            dates <- getBondDates $ sortedBond b'
+            printBondDates dates
+            return True
+        Nothing -> return False
+
+eval (Values (conds, bond)) = do
+    case bond of
+        SVar name -> printBnd ("Values for Bond " ++ name) 
+        _ -> printBnd "Values View"
+    b <- convertCond conds bond
+    case b of
+        Just b' -> do
+            vals <- getBondValues $ sortedBond b'
+            printBondValues vals
             return True
         Nothing -> return False
 
 eval _ = return False
 
-getBondDetail :: MonadBnd m => Bond -> m (Day, Maybe Day, Maybe Day, Maybe Day, Integer, Int, Maybe Money, [Money], [Money], Maybe Money, [Money], Maybe Double)
-getBondDetail b = do
+sortedBond :: Bond -> [BondAsTuple]
+sortedBond b = sortByDay $ bondAsList Nothing b
+
+getBondDates :: MonadBnd m => [BondAsTuple] -> m (Day, Maybe Day, Maybe Day, Maybe Day, Int, Int)
+getBondDates b = do
     d <- getDate
-    p <- getPrice
-    let bd = sortByDay $ bondAsList Nothing b
-    let after = filterFrom d bd
-    let before = filterTo d bd
+    let after = filterFrom d b
+    let before = filterTo d b
     let nextDate = if null after then Nothing else Just (tupleDate $ head after)
     let maturityDate = if null after then Nothing else Just (tupleDate $ last after)
     let prevDate = if null before then Nothing else Just (tupleDate $ last before)
     let daysToNext = case nextDate of
                         Nothing -> 0
-                        Just nd -> diffDays nd d
+                        Just nd -> fromInteger $ diffDays nd d
     let remainingPayments = length after
-    let nominal = getValue bd
+    return (d, maturityDate, prevDate, nextDate, daysToNext, remainingPayments)
+
+getBondValues :: MonadBnd m => [BondAsTuple] -> m (Maybe Money, [Money], [Money], Maybe Money, [Money], Maybe Double)
+getBondValues b = do
+    p <- getPrice
+    d <- getDate
+    let after = filterFrom d b
+    let nominal = getValue b
     let residual = getValue after
+    let before = filterTo d b
+    let nextDate = if null after then Nothing else Just (tupleDate $ head after)
+    let prevDate = if null before then Nothing else Just (tupleDate $ last before)
     let accruedInterest = if null after then Nothing else getInterest ((\(_, _, r, _, c, _) -> (r, c)) $ head after) d prevDate nextDate
     let technical = case accruedInterest of
                         Just (ai, c) -> addToAccum (ai, c) residual
@@ -73,7 +109,7 @@ getBondDetail b = do
                     Just (p', c) -> case findMatchingCurrency c technical of
                                     Just (tv, _) -> Just (p' / tv)
                                     Nothing -> Nothing
-    return (d, maturityDate, prevDate, nextDate, daysToNext, remainingPayments, p, nominal, residual, accruedInterest, technical, parity)
+    return (p, nominal, residual, accruedInterest, technical, parity)
 
 findMatchingCurrency :: Currency -> [Money] -> Maybe Money
 findMatchingCurrency _ [] = Nothing
