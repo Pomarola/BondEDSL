@@ -2,7 +2,7 @@ portcashflow suppose [DATE 10/10/2011, BCCER 2.0] myPort3
 portcashflow suppose [TODAY] myPort3
 portcashflow myPort3
 
-BC> detail suppose [PRICE 50.0 ARS, DATE 10/12/2011] g
+BC> detail suppose [MARKET 50.0 $ARS, DATE 10/12/2011] g
 Detail for Bond
 Supposed Date        10/12/2011
 Maturity Date        10/12/2019
@@ -16,7 +16,7 @@ Accrued Interest     0.0 USD
 Technical Value      45.0 USD
 Parity               N/A
 
-BC> detail suppose [PRICE 50.0 USD, DATE 10/12/2011] g
+BC> detail suppose [MARKET 50.0 $USD, DATE 10/12/2011] g
 Detail for Bond
 Supposed Date        10/12/2011
 Maturity Date        10/12/2019
@@ -30,7 +30,7 @@ Accrued Interest     0.0 USD
 Technical Value      45.0 USD
 Parity               111.11111111111111 %
 
-BC> detail suppose [PRICE 50.0 USD, DATE 10/11/2012] g
+BC> detail suppose [MARKET 50.0 $USD, DATE 10/11/2012] g
 Detail for Bond
 Supposed Date        10/11/2012
 Maturity Date        10/12/2019
@@ -58,7 +58,7 @@ Accrued Interest     12.681924882629108 USD
 Technical Value      37.681924882629104 USD
 Parity               132.68961220993617 %
 
-BC> detail suppose [TODAY, PRICE 40.0 $USD] ae38
+BC> detail suppose [TODAY, MARKET 40.0 $USD] ae38
 Detail for Bond ae38
 Supposed Date        20/02/2024 
 Maturity Date        09/01/2038 
@@ -73,7 +73,7 @@ Accrued Interest     0.490 USD
 Technical Value      100.490 USD
 Parity               39.805 %
 
-BC> detail suppose [TODAY, PRICE 45.63 $USD] al30  
+BC> detail suppose [TODAY, MARKET 45.63 $USD] al30  
 Detail for Bond al30
 Supposed Date        20/02/2024
 Maturity Date        09/07/2030

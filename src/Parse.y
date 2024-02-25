@@ -101,14 +101,14 @@ CondsPort       :: {[Cond]}
                 |                                               { [] }
 
 CondBond        :: {Cond}
-                : BCRACER DOUBLE                                { BCCER $2 }
-                | BCRATC DOUBLE                                 { BCTC $2 }
-                | MARKET Money                                 { Market $2 }
-                | DATE Date                                     { Date $2 }
+                : CommonConds                                   { $1 }
+                | MARKET Money                                  { Market $2 }
                 | QUANTITY INT                                  { Quantity $2 }
-                | TODAY                                         { Today }
-                
+
 CondPort        :: {Cond}
+                : CommonConds                                   { $1 }
+                
+CommonConds     :: {Cond}
                 : BCRACER DOUBLE                                { BCCER $2 }
                 | BCRATC DOUBLE                                 { BCTC $2 }
                 | DATE Date                                     { Date $2 }
