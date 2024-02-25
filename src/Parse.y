@@ -34,8 +34,8 @@ import Data.Time.Calendar (Day, fromGregorian)
         PORTCASHFLOW    { TPortCashflow }
         SUPPOSE         { TSuppose }
         TODAY           { TToday }
-        BCRACER         { TBcracer }
-        BCRATC          { TBcratc }
+        BCRACER         { TBcraCer }
+        BCRAUSD         { TBcraUsd }
         MARKET          { TMarket }
         DATE            { TDate }
         QUANTITY        { TQuantity }
@@ -69,50 +69,33 @@ Defs            : Def Defs                                      { $1 : $2 }
                 |                                               { [] }
                 
 Exp             :: {Exp}
-                : PRINT SupBond                                 { Print $2 }
-                | DATES SupBond                                 { Dates $2 }
-                | VALUES SupBond                                { Values $2 }
-                | DETAIL SupBond                                { Detail $2 }
-                | CASHFLOW SupBond                              { Cashflow $2 }
-                | PORTCASHFLOW SupPort                          { PortCashflow $2 }
+                : PRINT Suppositions Bond                       { Print $2 $3 }
+                | DATES Suppositions Bond                       { Dates $2 $3 }
+                | VALUES Suppositions Bond                      { Values $2 $3 }
+                | DETAIL Suppositions Bond                      { Detail $2 $3 }
+                | CASHFLOW Suppositions Bond                    { Cashflow $2 $3 }
+                | PORTCASHFLOW Suppositions VAR                 { PortCashflow $2 $3 }
 
-SupPort         : VAR                                           { ([],$1) }
-                | SUPPOSE '[' CondsPort ']' VAR                 { ($3,$5) }
+Suppositions    : SUPPOSE '[' Conds ']'                         { $3 }
+                |                                               { [] }
 
-SupBond         :: {CondBond}
-                : Bond                                          { ([],$1) }
-                | SUPPOSE '[' CondsBond ']' Bond                { ($3,$5) }
+Conds           :: {[Cond]}
+                : Cond ',' Conds                                { $1 : $3 }
+                | Cond                                          { [$1] }
+
+Cond            :: {Cond}
+                : BCRACER DOUBLE                                { BCCER $2 }
+                | BCRAUSD DOUBLE                                { BCUSD $2 }
+                | DATE Date                                     { Date $2 }
+                | TODAY                                         { Today }
+                | MARKET Money                                  { Market $2 }
+                | QUANTITY INT                                  { Quantity $2 }
 
 Def             : DEF VAR '=' Bond                              { Def $2 $4 } 
                 | PORTFOLIO VAR '=' '[' Vars ']'                { Portfolio $2 $5 }
 
 Vars            : INT VAR ',' Vars                              { ($1,$2) : $4 }
                 | INT VAR                                       { [($1,$2)] }
-                |                                               { [] }
-
-CondsBond       :: {[Cond]}
-                : CondBond ',' CondsBond                        { $1 : $3 }
-                | CondBond                                      { [$1] }
-                |                                               { [] }
-
-CondsPort       :: {[Cond]}
-                : CondPort ',' CondsPort                        { $1 : $3 }
-                | CondPort                                      { [$1] }
-                |                                               { [] }
-
-CondBond        :: {Cond}
-                : CommonConds                                   { $1 }
-                | MARKET Money                                  { Market $2 }
-                | QUANTITY INT                                  { Quantity $2 }
-
-CondPort        :: {Cond}
-                : CommonConds                                   { $1 }
-                
-CommonConds     :: {Cond}
-                : BCRACER DOUBLE                                { BCCER $2 }
-                | BCRATC DOUBLE                                 { BCTC $2 }
-                | DATE Date                                     { Date $2 }
-                | TODAY                                         { Today }
 
 Bond            :: {SugarBond}
                 : Bond '&' Bond                                 { SAnd $1 $3 }
@@ -199,8 +182,8 @@ data Token = TEquals
                 | TPortCashflow
                 | TSuppose
                 | TToday
-                | TBcracer
-                | TBcratc
+                | TBcraCer
+                | TBcraUsd
                 | TMarket
                 | TDate
                 | TQuantity
@@ -254,8 +237,8 @@ lexer cont s = case s of
                                 ("cashflow",rest) -> cont TCashflow rest
                                 ("portcashflow",rest) -> cont TPortCashflow rest
                                 ("suppose",rest) -> cont TSuppose rest
-                                ("BCTC",rest) -> cont TBcratc rest
-                                ("BCCER",rest) -> cont TBcracer rest
+                                ("BCUSD",rest) -> cont TBcraUsd rest
+                                ("BCCER",rest) -> cont TBcraCer rest
                                 ("TODAY",rest) -> cont TToday rest
                                 ("MARKET",rest) -> cont TMarket rest
                                 ("DATE",rest) -> cont TDate rest

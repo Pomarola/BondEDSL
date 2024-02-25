@@ -9,22 +9,20 @@ import MonadBnd
 data Frequency = Annual | SemiAnnual | Quarterly | Monthly
     deriving (Eq, Show)
 
-data Cond = BCCER Double | BCTC Double | Date Day | Market Money | Quantity Int | Today               -- Market seria current value, date el dia que queremos sup, bccer cer acutal y bctc tipocambio actual
+data Cond = BCCER Double | BCUSD Double | Date Day | Market Money | Quantity Int | Today               -- Market seria current value, date el dia que queremos sup, bccer cer acutal y BCUSD tipocambio actual
     deriving Show
 
 data DefOrExp = Def Var SugarBond | Eval Exp | Portfolio Var [(Int, Var)]
     deriving Show
 
 data Exp =
-    Print CondBond
-    | Dates CondBond
-    | Values CondBond
-    | Detail CondBond
-    | Cashflow CondBond
-    | PortCashflow ([Cond], Var)
+    Print [Cond] SugarBond
+    | Dates [Cond] SugarBond
+    | Values [Cond] SugarBond
+    | Detail [Cond] SugarBond
+    | Cashflow [Cond] SugarBond
+    | PortCashflow [Cond] Var
     deriving Show
-
-type CondBond = ([Cond], SugarBond)
 
 type Iterator = (Int, Frequency, Day)
 

@@ -9,7 +9,7 @@ import PrettyPrinter
 import State
 
 eval :: MonadBnd m => Exp -> m Bool
-eval (Cashflow (conds, bond)) = do
+eval (Cashflow conds bond) = do
     case bond of
         SVar name -> printBnd ("Cashflow for Bond " ++ name) 
         _ -> printBnd "Cashflow"
@@ -22,7 +22,7 @@ eval (Cashflow (conds, bond)) = do
             return True
         Nothing -> return False
 
-eval (PortCashflow (conds, var)) = do
+eval (PortCashflow conds var) = do
     printBnd $ "Cashflow for portfolio " ++ var
     p <- lookupPortfolio var
     case p of
@@ -34,7 +34,7 @@ eval (PortCashflow (conds, var)) = do
             return True
         Nothing -> return False
 
-eval (Detail (conds, bond)) = do
+eval (Detail conds bond) = do
     case bond of
         SVar name -> printBnd ("Full Detail for Bond " ++ name) 
         _ -> printBnd "Full Detail View"
@@ -47,7 +47,7 @@ eval (Detail (conds, bond)) = do
             return True
         Nothing -> return False
 
-eval (Dates (conds, bond)) = do
+eval (Dates conds bond) = do
     case bond of
         SVar name -> printBnd ("Dates for Bond " ++ name) 
         _ -> printBnd "Dates View"
@@ -59,7 +59,7 @@ eval (Dates (conds, bond)) = do
             return True
         Nothing -> return False
 
-eval (Values (conds, bond)) = do
+eval (Values conds bond) = do
     case bond of
         SVar name -> printBnd ("Values for Bond " ++ name) 
         _ -> printBnd "Values View"
@@ -71,7 +71,7 @@ eval (Values (conds, bond)) = do
             return True
         Nothing -> return False
 
-eval (Print (conds, bond)) = do
+eval (Print conds bond) = do
     case bond of
         SVar name -> printBnd ("Tuples for Bond " ++ name) 
         _ -> printBnd "Tuple View"
@@ -163,7 +163,7 @@ convertCond conds sb = do
 applyConds :: MonadBnd m => [Cond] -> Bond -> m Bond
 applyConds [] b = return b
 applyConds ((BCCER cer):cs) b = let b' = replaceScaler (CER cer) b in applyConds cs b'
-applyConds ((BCTC tc):cs) b = let b' = replaceScaler (DolarLinked tc) b in applyConds cs b'
+applyConds ((BCUSD tc):cs) b = let b' = replaceScaler (DolarLinked tc) b in applyConds cs b'
 applyConds ((Quantity n):cs) b = applyConds cs (Scale (Mult (fromIntegral n)) b)
 applyConds ((Market m):cs) b = do
     setPrice m
