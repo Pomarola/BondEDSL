@@ -118,8 +118,9 @@ helpTxt :: [InteractiveCommand] -> String
 helpTxt cs
   =  "Lista de comandos:  Cualquier comando puede ser abreviado a :c donde\n" ++
      "c es el primer caracter del nombre completo.\n\n" ++
-     "<expr>                  evaluar la expresión\n" ++
-     "let <var> = <expr>      definir una variable\n" ++
+     "<expr>                  Evaluar la expresión\n" ++
+     "def <var> = <bond>      Definir un bono\n" ++
+     "portfolio <var> = [<int> <var>]      Definir un portafolio\n" ++
      unlines (map (\ (Cmd c a _ d) ->
                    let  ct = intercalate ", " (map (++ if null a then "" else " " ++ a) c)
                    in   ct ++ replicate ((24 - length ct) `max` 2) ' ' ++ d) cs)

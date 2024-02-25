@@ -34,8 +34,7 @@ data SugarBond =
     | SScale Scaler SugarBond
     | SAt Day Payment
     | SRepeat Iterator Payment
-    | SCouponBullet Iterator Double Money
-    | SCouponAmort Iterator Double Double Money
+    | SCoupon Iterator Double Double Money
     deriving Show
 
 repeat :: Int -> Frequency -> Day -> Payment -> Bond
@@ -83,7 +82,6 @@ convert (SScale s b) = do
 convert (SAt d p) = return $ Just (at d p)
 convert (SRepeat (0, _, _) _) = return Nothing
 convert (SRepeat (n, f, d) p) = return $ Just (repeat n f d p)
-convert (SCouponBullet (0, _, _) _ _) = return Nothing
-convert (SCouponBullet (n, f, d) r (b, c)) = return $ Just (couponBullet n f d r b c)
-convert (SCouponAmort (0, _, _) _ _ _) = return Nothing
-convert (SCouponAmort (n, f, d) r a (b, c)) = return $ Just (couponAmort n f d r a b c)
+convert (SCoupon (0, _, _) _ _ _) = return Nothing
+convert (SCoupon (n, f, d) r 0 (b, c)) = return $ Just (couponBullet n f d r b c)
+convert (SCoupon (n, f, d) r a (b, c)) = return $ Just (couponAmort n f d r a b c)

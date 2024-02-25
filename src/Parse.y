@@ -121,10 +121,8 @@ Bond            :: {SugarBond}
                 | VAR                                           { SVar $1 }
                 | SCALE Scaler Bond                             { SScale $2 $3 }
                 | Iterate Payment                               { SRepeat $1 $2 }
-                | Iterate INTEREST PERCENT OF Money              { SCouponBullet $1 $3 $5 }
-                | Iterate INTEREST PERCENT AMORT DOUBLE OF Money { SCouponAmort $1 $3 $5 $7 }
-                | Iterate AMORT DOUBLE INTEREST PERCENT OF Money { SCouponAmort $1 $5 $3 $7 }
-
+                | Iterate INTEREST PERCENT AmortPay OF Money    { SCoupon $1 $3 $4 $6 }
+                | Iterate AmortPay INTEREST PERCENT OF Money    { SCoupon $1 $4 $2 $6 }
 
 Iterate         :: {Iterator}
                 : REPEAT INT FREQ Date                          { ($2,$3,$4) }
@@ -133,13 +131,17 @@ Money           :: {Money}
                 : DOUBLE CURRENCY                               { ($1,$2) }
 
 Payment         :: {Payment}
-                : RENT DOUBLE AMORT DOUBLE CURRENCY             { Pay $2 $4 $5 }
-                | AMORT DOUBLE RENT DOUBLE CURRENCY             { Pay $4 $2 $5 }
-                | RENT DOUBLE CURRENCY                          { Pay $2 0 $3 }
-                | AMORT DOUBLE CURRENCY                         { Pay 0 $2 $3 }
-                | RENT PERCENT OF DOUBLE CURRENCY               { Pay ($2 * $4 / 100) 0 $5 }
-                | AMORT PERCENT OF DOUBLE CURRENCY              { Pay 0 ($2 * $4 / 100) $5 }
+                : RentPay AmortPay CURRENCY                     { Pay $1 $2 $3 }
+                | AmortPay RentPay CURRENCY                     { Pay $2 $1 $3 }
                 | ZERO                                          { PZero }
+
+RentPay         : RENT DOUBLE                                   { $2 }
+                | RENT PERCENT OF DOUBLE                        { $2 * $4 / 100 }
+                |                                               { 0 }
+
+AmortPay        : AMORT DOUBLE                                  { $2 }
+                | AMORT PERCENT OF DOUBLE                       { $2 * $4 / 100 }
+                |                                               { 0 }
 
 Scaler          :: {Scaler}
                 : DOUBLE                                        { Mult $1 }
