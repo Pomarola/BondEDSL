@@ -15,3 +15,5 @@ def aep5 = repeat 5 SEMIANNUAL 9/1/2025 rent 2.5% of 1.0 $USD
 def aep6 = repeat 22 SEMIANNUAL 9/7/2027 interest 5.0% amort 0.0454545 of 1.0 $USD
 
 def ae38 = scale 100.0 aep1 & aep2 & aep3 & aep4 & aep5 & aep6
+
+portfolio arg = [2 al30, 3 ae38]

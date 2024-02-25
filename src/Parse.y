@@ -36,9 +36,9 @@ import Data.Time.Calendar (Day, fromGregorian)
         TODAY           { TToday }
         BCRACER         { TBcracer }
         BCRATC          { TBcratc }
-        CURRENT         { TCurrent }
+        MARKET          { TMarket }
         DATE            { TDate }
-        VN              { TVn }
+        QUANTITY        { TQuantity }
         AT              { TAt }
         SCALE           { TScale }
         RENT            { TRent }
@@ -103,9 +103,9 @@ CondsPort       :: {[Cond]}
 CondBond        :: {Cond}
                 : BCRACER DOUBLE                                { BCCER $2 }
                 | BCRATC DOUBLE                                 { BCTC $2 }
-                | CURRENT Money                                 { CV $2 }
+                | MARKET Money                                 { Market $2 }
                 | DATE Date                                     { Date $2 }
-                | VN INT                                        { VN $2 }
+                | QUANTITY INT                                  { Quantity $2 }
                 | TODAY                                         { Today }
                 
 CondPort        :: {Cond}
@@ -199,9 +199,9 @@ data Token = TEquals
                 | TToday
                 | TBcracer
                 | TBcratc
-                | TCurrent
+                | TMarket
                 | TDate
-                | TVn
+                | TQuantity
                 | TAt
                 | TScale
                 | TRent
@@ -255,9 +255,9 @@ lexer cont s = case s of
                                 ("BCTC",rest) -> cont TBcratc rest
                                 ("BCCER",rest) -> cont TBcracer rest
                                 ("TODAY",rest) -> cont TToday rest
-                                ("PRICE",rest) -> cont TCurrent rest
+                                ("MARKET",rest) -> cont TMarket rest
                                 ("DATE",rest) -> cont TDate rest
-                                ("VN",rest) -> cont TVn rest
+                                ("QUANTITY",rest) -> cont TQuantity rest
                                 ("zero",rest) -> cont TZero rest
                                 ("at",rest) -> cont TAt rest
                                 ("repeat",rest) -> cont TRepeat rest
