@@ -17,3 +17,10 @@ def aep6 = repeat 22 SEMIANNUAL 9/7/2027 interest 5.0% amort 0.0454545 of 1.0 $U
 def ae38 = scale 100.0 aep1 & aep2 & aep3 & aep4 & aep5 & aep6
 
 portfolio arg = [2 al30, 3 ae38]
+
+def tv24 = scale DL 152.83 repeat 4 SEMIANNUAL 30/10/2022 interest 0.4% of 152.83 $ARS
+
+def tx26p1 = repeat 7 SEMIANNUAL 9/5/2021 rent 1.0% of 1.0 $ARS
+def tx26p2 = repeat 5 SEMIANNUAL 9/11/2024 interest 2.0% amort 20.0% of 1.0 of 1.0 $ARS
+
+def tx26 = scale CER 22.544 tx26p1 & tx26p2

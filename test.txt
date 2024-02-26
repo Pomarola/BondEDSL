@@ -100,3 +100,8 @@ Cashflow for portfoliomyPortB
 10/03/2025                  a2                 USD             975.000               0.000             975.000                 N/A
 10/09/2025                  a2                 USD             975.000               0.000             975.000                 N/A
 10/03/2026                  a2                 USD             975.000           30000.000           30975.000                 N/A
+
+
+cashflow suppose [TODAY, BCCER 262.434, QUANTITY 100] tx26 evaluando hoy 25/02/2024, tomando emision 04/09/2020. CER es 10 dias habiles antes 21/08/2020	22,5440
+
+cashflow suppose [BCUSD 838.95, QUANTITY 100, TODAY] tv24 evaluado hoy 25/2/2025 Fecha Emisión	18/04/2022
