@@ -1,0 +1,19 @@
+def x = at 10/12/2011 zero
+def y = at 10/12/2011 rent 10.0 $ARS
+def z = scale 2.0 x
+def w = scale CER 1.0 y
+def b = repeat 5 ANNUAL 10/10/2010 zero
+def a = scale DL 100.0 repeat 5 ANNUAL 10/10/2010 amort 50.0 $ARS
+def c = scale DL 100.0 b
+def d = at 10/12/2011 rent 10.0 $ARS & at 10/12/2010 zero & at 10/12/2012 amort 20.0 $ARS & at 10/12/2009 rent 15.0 amort 25.0 $ARS
+def g = at 10/12/2011 rent 10.0 $ARS & at 10/12/2010 zero & at 10/12/2012 amort 20.0 $USD & at 10/12/2009 rent 15.0 amort 25.0 $ARS & at 10/12/2019 rent 15.0 amort 25.0 $USD
+
+def e = x & d 
+
+def a1 = repeat 5 MONTHLY 10/2/2024 interest 7.5% amort 10.0 of 100.0 $ARS 
+def a2 = repeat 5 SEMIANNUAL 10/3/2024 interest 6.5% of 100.0 $USD  
+
+portfolio myPort = [100 x, 200 d]
+portfolio myPort2 = [100 y, 200 d, 300 e]
+portfolio myPort3 = [100 w, 200 c, 300 e]
+portfolio myPortB = [200 a1, 300 a2, 100 g, 20 w]

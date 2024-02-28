@@ -1,124 +1,104 @@
-module Main where
+module Main (main) where
 
-import           Control.Exception              ( catch
-                                                , IOException
-                                                )
-import           Control.Monad.Except
-import           Data.Char
-import           Data.List
-import           Data.Maybe
-import           Prelude                 hiding ( print )
-import           System.Console.Haskeline
-import qualified Control.Monad.Catch           as MC
-import           System.Environment
-import           System.IO               hiding ( print )
+import Control.Exception ( catch, IOException )
+import Control.Monad.Except ( when, MonadError(throwError), MonadTrans(lift), MonadIO(liftIO) )
+import Data.Char ( isSpace )
+import Data.List ( nub, intercalate, isPrefixOf, isSuffixOf )
+import Prelude hiding ( print, exp )
+import System.Console.Haskeline ( getInputLine, defaultSettings, runInputT, InputT )
+import System.IO ( hPutStrLn, stderr, hPrint )
+import Control.Monad.Catch (MonadMask)
+import System.Exit ( exitWith, ExitCode(ExitFailure) )
 
-import           Common
 import           Parse
 import           Sugar
 import           Eval
-
----------------------
---- Interpreter
----------------------
+import           State
+import           MonadBnd
+import           Errors
 
 main :: IO ()
-main = runInputT defaultSettings main'
-
-main' :: InputT IO ()
-main' = do
-  args <- lift getArgs
-  readevalprint args (S True [])
+main = do
+  runOrFail (runInputT defaultSettings repl)
 
 iname, iprompt :: String
-iname = "Contract Calculator"
-iprompt = "CC> "
+iname = "Bond Calculator"
+iprompt = "BC> "
 
-ioExceptionCatcher :: IOException -> IO (Maybe a)
-ioExceptionCatcher _ = return Nothing
+runOrFail :: Bnd a -> IO a
+runOrFail m = do
+  r <- runBnd m
+  case r of
+    Left err -> do
+      liftIO $ hPrint stderr err
+      exitWith (ExitFailure 1)
+    Right v -> return v
 
-data State = S
-  { inter :: Bool -- True, si estamos en modo interactivo.
-    , env :: Env  -- Entorno con variables globales y su valor
-  }
-
---  read-eval-print loop
-readevalprint :: [String] -> State -> InputT IO ()
-readevalprint args state@(S inter env) =
-  let rec st = do
-        mx <- MC.catch
-          (if inter then getInputLine iprompt else lift $ fmap Just getLine)
-          (lift . ioExceptionCatcher)
-        case mx of
-          Nothing -> return ()
-          Just "" -> rec st
-          Just x  -> do
-            c   <- interpretCommand x
-            st' <- handleCommand st c
-            maybe (return ()) rec st'
-  in  do
-        -- state' <- compileFiles args state -- ver si va
-        when inter $ lift $ putStrLn
-          (  "Intérprete de "
-          ++ iname
-          ++ ".\n"
-          ++ "Escriba :? para recibir ayuda."
-          )
-        --  enter loop
-        rec state { inter = True } -- state' ver si va
+repl :: (MonadBnd m, MonadMask m) => InputT m ()
+repl = do
+       liftIO $ putStrLn
+         (  "Entorno interactivo de "
+         ++ iname
+         ++ ".\n"
+         ++ "Escriba :? para recibir ayuda.")
+       loop
+  where loop = do
+           minput <- getInputLine iprompt
+           case minput of
+               Nothing -> return ()
+               Just "" -> loop
+               Just x -> do
+                       c <- liftIO $ interpretCommand x
+                       b <- lift $ catchErrors $ handleCommand c
+                       maybe loop (`when` loop) b
 
 data Command = Compile CompileForm
-              -- | Print String
-              -- | Recompile
               | Browse
               | Quit
               | Help
               | Noop
-              -- | FindType String
 
 data CompileForm = CompileInteractive  String
                   | CompileFile         String
 
-interpretCommand :: String -> InputT IO Command
-interpretCommand x = lift $ if isPrefixOf ":" x
-  then do
-    let (cmd, t') = break isSpace x
-    let t         = dropWhile isSpace t'
-    --  find matching commands
-    let matching = filter (\(Cmd cs _ _ _) -> any (isPrefixOf cmd) cs) commands
-    case matching of
-      [] -> do
-        putStrLn
-          ("Comando desconocido `" ++ cmd ++ "'. Escriba :? para recibir ayuda."
-          )
-        return Noop
-      [Cmd _ _ f _] -> do
-        return (f t)
-      _ -> do
-        putStrLn
-          (  "Comando ambigüo, podría ser "
-          ++ concat (intersperse ", " [ head cs | Cmd cs _ _ _ <- matching ])
-          ++ "."
-          )
-        return Noop
-  else return (Compile (CompileInteractive x))
+-- | Parser simple de comando interactivos
+interpretCommand :: String -> IO Command
+interpretCommand x
+  =  if ":" `isPrefixOf` x then
+       do  let  (cmd,t')  =  break isSpace x
+                t         =  dropWhile isSpace t'
+           --  find matching commands
+           let  matching  =  filter (\ (Cmd cs _ _ _) -> any (isPrefixOf cmd) cs) commands
+           case matching of
+             []  ->  do  putStrLn ("Comando desconocido `" ++ cmd ++ "'. Escriba :? para recibir ayuda.")
+                         return Noop
+             [Cmd _ _ f _]
+                 ->  do  return (f t)
+             _   ->  do  putStrLn ("Comando ambigüo, podría ser " ++
+                                   intercalate ", " ([ head cs | Cmd cs _ _ _ <- matching ]) ++ ".")
+                         return Noop
 
-handleCommand :: State -> Command -> InputT IO (Maybe State)
-handleCommand state@(S inter env) cmd = case cmd of
-  Quit   -> lift $ when (not inter) (putStrLn "!@#$^&*") >> return Nothing
-  Noop   -> return (Just state)
-  Help   -> lift $ putStr (helpTxt commands) >> return (Just state)
-  Browse -> lift $ do
-    putStr (unlines (reverse (nub (map show env))))
-    return (Just state)
-  Compile c -> do
-    state' <- case c of
-      CompileInteractive s -> compilePhrase state s
-      CompileFile        f -> compileFile state f -- check extension aca
-    return (Just state')
-  -- Print s ->
-  --   let s' = reverse (dropWhile isSpace (reverse (dropWhile isSpace s)))
-  --   in  printPhrase s' >> return (Just state)
+     else
+       return (Compile (CompileInteractive x))
+
+handleCommand ::  MonadBnd m => Command -> m Bool
+handleCommand cmd = case cmd of
+       Quit   ->  return False
+       Noop   ->  return True
+       Help   ->  printBnd (helpTxt commands) >> return True
+       Browse ->  do
+                      e <- getEnv
+                      printBnd "Entorno de Bonos:"
+                      printBnd (unlines (reverse (nub (map show e))))
+                      p <- getPortfolios
+                      printBnd "Entorno de Portfolios:"
+                      printBnd (unlines (reverse (nub (map show p))))
+                      return True
+       Compile c ->
+                  do  case c of
+                          CompileInteractive e -> compilePhrase e
+                          CompileFile f        -> compileFile f
+                      return True
 
 data InteractiveCommand = Cmd [String] String (String -> Command) String
 
@@ -135,89 +115,58 @@ commands =
   ]
 
 helpTxt :: [InteractiveCommand] -> String
-helpTxt cs =
-  "Lista de comandos:  Cualquier comando puede ser abreviado a :c donde\n"
-    ++ "c es el primer caracter del nombre completo.\n\n"
-    ++ "<expr>                  evaluar la expresión\n"
-    ++ "def <var> = <expr>      definir una variable\n"
-    ++ unlines
-         (map
-           (\(Cmd c a _ d) ->
-             let
-               ct =
-                 concat
-                   (intersperse ", "
-                                (map (++ if null a then "" else " " ++ a) c)
-                   )
-             in  ct ++ replicate ((24 - length ct) `max` 2) ' ' ++ d
-           )
-           cs
-         )
+helpTxt cs
+  =  "Lista de comandos:  Cualquier comando puede ser abreviado a :c donde\n" ++
+     "c es el primer caracter del nombre completo.\n\n" ++
+     "<expr>                  Evaluar la expresión\n" ++
+     "def <var> = <bond>      Definir un bono\n" ++
+     "portfolio <var> = [<int> <var>]      Definir un portafolio\n" ++
+     unlines (map (\ (Cmd c a _ d) ->
+                   let  ct = intercalate ", " (map (++ if null a then "" else " " ++ a) c)
+                   in   ct ++ replicate ((24 - length ct) `max` 2) ' ' ++ d) cs)
 
--- checkExtension:: String -> Bool
--- checkExtension = ".cc" `isSuffixOf` reverse (dropWhile isSpace (reverse s))
+checkExtension:: String -> Bool
+checkExtension f = ".bnd" `isSuffixOf` f
 
-compileFiles :: [String] -> State -> InputT IO State
-compileFiles xs s =
-  foldM (\s x -> compileFile (s { inter = False }) x) s xs
+loadFile ::  MonadBnd m => String -> m [DefOrExp]
+loadFile filename = do
+      x <- liftIO $ catch (readFile filename)
+                (\e -> do let err = show (e :: IOException)
+                          hPutStrLn stderr ("No se pudo abrir el archivo " ++ filename ++ ": " ++ err)
+                          return "")
+      parseIO defs_parse x
 
-compileFile :: State -> String -> InputT IO State
-compileFile state f = do
-  lift $ putStrLn ("Abriendo " ++ f ++ "...")
-  let f' = reverse (dropWhile isSpace (reverse f))
-  x <- lift $ Control.Exception.catch
-    (readFile f')
-    (\e -> do
-      let err = show (e :: IOException)
-      hPutStr stderr
-              ("No se pudo abrir el archivo " ++ f' ++ ": " ++ err ++ "\n")
-      return ""
-    )
-  defs <- parseIO f' (defs_parse) x
-  maybe (return state) (foldM handleDefOrExp state) defs
+compileFile ::  MonadBnd m => FilePath -> m ()
+compileFile f = let filename = reverse (dropWhile isSpace (reverse f)) in
+    if not (checkExtension filename)
+      then failBnd ("El archivo " ++ filename ++ " no tiene extension .bnd")
+    else do
+      printBnd ("Abriendo "++f++"...")
+      defs <- loadFile filename
+      mapM_ handleDefOrExp defs
 
+compilePhrase ::  MonadBnd m => String -> m ()
+compilePhrase x = do
+    x' <- parseIO def_or_exp_parse x
+    handleDefOrExp x'
 
-compilePhrase :: State -> String -> InputT IO State
-compilePhrase state x = do
-  x' <- parseIO "<interactive>" def_or_exp_parse x
-  maybe (return state) (handleDefOrExp state) x'
+parseIO :: MonadBnd m => (String -> ParseResult a) -> String -> m a
+parseIO p x = case p x of
+  Failed e -> throwError (Error e)
+  Ok r -> return r
 
--- printPhrase :: String -> InputT IO ()
--- printPhrase x = do
---   x' <- parseIO "<interactive>" def_or_exp_parse x
---   maybe (return ()) (printStmt . fmap (\y -> (y, conversion y))) x'
+handleDefOrExp :: MonadBnd m => DefOrExp -> m ()
+handleDefOrExp (Def v sb) = do
+  b <- convert sb
+  case b of
+    Just b' -> addDef (v, b')
+    Nothing -> failBnd ("No se pudo convertir " ++ v ++ " a bono.")
 
--- printStmt :: Stmt (LamTerm, Term) -> InputT IO ()
--- printStmt stmt = lift $ do
---   let outtext = case stmt of
---         Def x (_, e) -> "def " ++ x ++ " = " ++ render (printTerm e)
---         Eval (d, e) ->
---           "LamTerm AST:\n"
---             ++ show d
---             ++ "\n\nTerm AST:\n"
---             ++ show e
---             ++ "\n\nSe muestra como:\n"
---             ++ render (printTerm e)
---   putStrLn outtext
+handleDefOrExp (Portfolio v ps) = do
+  addPortfolio (v, ps)
 
-parseIO :: String -> (String -> ParseResult a) -> String -> InputT IO (Maybe a)
-parseIO f p x = lift $ case p x of
-  Failed e -> do
-    putStrLn (f ++ ": " ++ e)
-    return Nothing
-  Ok r -> return (Just r)
-
-handleDefOrExp :: State -> DefOrExp -> InputT IO State
-handleDefOrExp state (Def v sc) = do
-  -- c' <- eval c
-  -- return (state { env = (v, c') : env state })
-  c <- convert (env state) sc
-  case c of
-    Just c' -> return (state { env = (v, c') : env state })
-    Nothing -> do
-      lift $ putStrLn ("No se pudo convertir " ++ v ++ " a contrato.")
-      return state
-
-handleDefOrExp state (Eval exp) = do
-  c <- eval (env state) exp
-  return state
+handleDefOrExp (Eval exp) = do
+  b <- eval exp
+  setDate oldDate
+  unsetPrice
+  if b then return () else failBnd "No se pudo evaluar la expresion."

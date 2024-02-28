@@ -1,6 +1,7 @@
 {
 module Parse where
-import Common 
+import Sugar
+import Bond 
 import Data.Maybe
 import Data.Char
 import Data.Time.Calendar (Day, fromGregorian)
@@ -14,77 +15,125 @@ import Data.Time.Calendar (Day, fromGregorian)
 %lexer {lexer} {TEOF}
 
 %token
-      '='     { TEquals }
-      '('     { TOpen }
-      ')'     { TClose }
-      '/'     { TBar }
-      DEF     { TDef }    
-      ZERO    { TZero }
-      VAR     { TVar $$ }
-      AND     { TAnd }
-      OR      { TOr }
-      ONE     { TOne }
-      GIVE    { TGive }
-      AT      { TAt }
-      SCALE   { TScale }
-      DOUBLE  { TDouble $$ }
-      CER     { TCer }
-      DL      { TDL }
-      INT     { TInt $$ }
-      CURRENCY { TCurrency $$ }
-      PRINT    { TPrint }
-      TIR      { TTir }
-      YIELD    { TYield }
-      PRICE    { TPrice }
-      ZCB      { TZcb }
-      REPEAT   { TRepeat }
-      PAY      { TPay }
-      FREQ     { TFreq $$ }
+        '='             { TEquals }
+        '('             { TOpen }
+        ')'             { TClose }
+        '['             { TListOpen }
+        ']'             { TListClose }
+        '/'             { TSlash }
+        ','             { TComma }
+        '&'             { TAnd }
+        PORTFOLIO       { TPortfolio }
+        DEF             { TDef }    
+        VAR             { TVar $$ }
+        PRINT           { TPrint }
+        DATES           { TDates }
+        VALUES          { TValues }
+        DETAIL          { TDetail }
+        CASHFLOW        { TCashflow }
+        PORTCASHFLOW    { TPortCashflow }
+        SUPPOSE         { TSuppose }
+        TODAY           { TToday }
+        BCRACER         { TBcraCer }
+        BCRAUSD         { TBcraUsd }
+        MARKET          { TMarket }
+        DATE            { TDate }
+        QUANTITY        { TQuantity }
+        AT              { TAt }
+        SCALE           { TScale }
+        RENT            { TRent }
+        AMORT           { TAmort }
+        ZERO            { TZero }
+        CURRENCY        { TCurrency $$ }
+        DOUBLE          { TDouble $$ }
+        INT             { TInt $$ }
+        CER             { TCer }
+        DL              { TDl }
+        REPEAT          { TRepeat }
+        FREQ            { TFreq $$ }
+        PERCENT         { TPercent $$ }
+        OF              { TOf }
+        INTEREST        { TInterest }
     
-
 %right VAR
 %left '=' 
-%right AND
-%right OR
+%right SCALE
+%right '&'
 
 %%
 
-DefOrExp        : Def                           { $1 }
-                | Exp                           { Eval $1 }
+DefOrExp        : Def                                           { $1 }
+                | Exp                                           { Eval $1 }
+
+Defs            : Def Defs                                      { $1 : $2 }
+                |                                               { [] }
                 
 Exp             :: {Exp}
-                : PRINT Contract                { Print $2 }
-                | TIR Contract                  { Tir $2 }
-                | YIELD Contract                { Yield $2 }
-                | PRICE Contract                { Price $2 }
+                : PRINT Suppositions Bond                       { Print $2 $3 }
+                | DATES Suppositions Bond                       { Dates $2 $3 }
+                | VALUES Suppositions Bond                      { Values $2 $3 }
+                | DETAIL Suppositions Bond                      { Detail $2 $3 }
+                | CASHFLOW Suppositions Bond                    { Cashflow $2 $3 }
+                | PORTCASHFLOW Suppositions VAR                 { PortCashflow $2 $3 }
 
-Def             : DEF VAR '=' Contract          { Def $2 $4 }       
+Suppositions    : SUPPOSE '[' Conds ']'                         { $3 }
+                |                                               { [] }
 
-Contract        :: {SugarContract} 
-                : ZERO                          { SZero }
-                | ONE CURRENCY                  { SOne $2 }
-                | GIVE Contract                 { SGive $2 }
-                | AT Date Contract              { SAt $2 $3 }
-                | SCALE Scaler Contract         { SScale $2 $3 }
-                | Contract AND Contract         { SAnd $1 $3 }
-                | Contract OR Contract          { SOr $1 $3 }
-                | '(' Contract ')'              { $2 }
-                | VAR                           { SVar $1 }
-                | ZCB Scaler CURRENCY Date      { SZcb $2 $3 $4 }
-                | PAY Scaler CURRENCY           { SPay $2 $3}
-                | REPEAT INT FREQ Date Contract { SRepeat $2 $3 $4 $5 }
+Conds           :: {[Cond]}
+                : Cond ',' Conds                                { $1 : $3 }
+                | Cond                                          { [$1] }
+
+Cond            :: {Cond}
+                : BCRACER DOUBLE                                { BCCER $2 }
+                | BCRAUSD DOUBLE                                { BCUSD $2 }
+                | DATE Date                                     { Date $2 }
+                | TODAY                                         { Today }
+                | MARKET Money                                  { Market $2 }
+                | QUANTITY INT                                  { Quantity $2 }
+
+Def             : DEF VAR '=' Bond                              { Def $2 $4 } 
+                | PORTFOLIO VAR '=' '[' Vars ']'                { Portfolio $2 $5 }
+
+Vars            : INT VAR ',' Vars                              { ($1,$2) : $4 }
+                | INT VAR                                       { [($1,$2)] }
+
+Bond            :: {SugarBond}
+                : Bond '&' Bond                                 { SAnd $1 $3 }
+                | '(' Bond ')'                                  { $2 }
+                | AT Date Payment                               { SAt $2 $3 }
+                | VAR                                           { SVar $1 }
+                | SCALE Scaler Bond                             { SScale $2 $3 }
+                | Iterate Payment                               { SRepeat $1 $2 }
+                | Iterate INTEREST PERCENT AmortPay OF Money    { SCoupon $1 $3 $4 $6 }
+                | Iterate AmortPay INTEREST PERCENT OF Money    { SCoupon $1 $4 $2 $6 }
+
+Iterate         :: {Iterator}
+                : REPEAT INT FREQ Date                          { ($2,$3,$4) }
+
+Money           :: {Money}
+                : DOUBLE CURRENCY                               { ($1,$2) }
+
+Payment         :: {Payment}
+                : RentPay AmortPay CURRENCY                     { Pay $1 $2 $3 }
+                | AmortPay RentPay CURRENCY                     { Pay $2 $1 $3 }
+                | ZERO                                          { PZero }
+
+RentPay         : RENT DOUBLE                                   { $2 }
+                | RENT PERCENT OF DOUBLE                        { $2 * $4 / 100 }
+                |                                               { 0 }
+
+AmortPay        : AMORT DOUBLE                                  { $2 }
+                | AMORT PERCENT OF DOUBLE                       { $2 * $4 / 100 }
+                |                                               { 0 }
 
 Scaler          :: {Scaler}
-                : DOUBLE                        { Mult $1 }
-                | CER                           { CER }
-                | DL                            { DolarLinked }
+                : DOUBLE                                        { Mult $1 }
+                | CER DOUBLE                                    { CER $2 }
+                | DL DOUBLE                                     { DolarLinked $2 }
          
 Date            :: {Day}
-                : INT '/' INT '/' INT           { fromGregorian (toInteger $5) $3 $1 }
+                : INT '/' INT '/' INT                           { fromGregorian (toInteger $5) $3 $1 }
 
-Defs            : Def Defs                      { $1 : $2 }
-                |                               { [] }
-     
 {
 
 data ParseResult a = Ok a | Failed String
@@ -114,32 +163,45 @@ catchP m k = \s l -> case m s l of
 happyError :: P a
 happyError = \ s i -> Failed $ "Línea "++(show (i::LineNumber))++": Error de parseo\n"++(s)
 
-data Token = TVar String
-                | TEquals
+data Token = TEquals
                 | TOpen
                 | TClose
-                | TBar
-                | TDef
-                | TZero
+                | TListOpen
+                | TListClose
+                | TSlash
+                | TComma
                 | TAnd
-                | TOr
-                | TOne
-                | TGive
+                | TPortfolio
+                | TDef
+                | TVar String
+                | TPrint
+                | TDates
+                | TValues
+                | TDetail
+                | TCashflow
+                | TPortCashflow
+                | TSuppose
+                | TToday
+                | TBcraCer
+                | TBcraUsd
+                | TMarket
+                | TDate
+                | TQuantity
                 | TAt
                 | TScale
+                | TRent
+                | TAmort
+                | TZero
+                | TCurrency String
                 | TDouble Double
-                | TCer
-                | TDL
                 | TInt Int
-                | TCurrency Currency
-                | TPrint
-                | TTir
-                | TYield
-                | TPrice
-                | TZcb
-                | TPay
+                | TCer
+                | TDl
                 | TRepeat
                 | TFreq Frequency
+                | TPercent Double
+                | TOf
+                | TInterest
                 | TEOF
                 deriving Show
 
@@ -154,32 +216,43 @@ lexer cont s = case s of
                 ('=':cs) -> cont TEquals cs
                 ('(':cs) -> cont TOpen cs
                 (')':cs) -> cont TClose cs
-                ('/':cs) -> cont TBar cs
+                ('[':cs) -> cont TListOpen cs
+                (']':cs) -> cont TListClose cs
+                ('/':cs) -> cont TSlash cs
+                (',':cs) -> cont TComma cs
+                ('&':cs) -> cont TAnd cs
+                ('$':c:cs)
+                        | isAlpha c -> lexCurrency (c:cs)
+                        | otherwise -> \line -> Failed $ "Linea "++(show line)++": '$' encontrado pero no se pudo reconocer ninguna moneda"
                 unknown -> \line -> Failed $ 
-                        "Línea "++(show line)++": No se puede reconocer "++(show $ take 10 unknown)++ "..."
+                        "Linea "++(show line)++": No se puede reconocer "++(show $ take 10 unknown)++ "..."
                 where   
-                        lexVar cs = case (span isAlpha cs) of
+                        lexVar cs = case (span isAlphaNum cs) of
+                                ("portfolio",rest) -> cont TPortfolio rest
                                 ("def",rest) -> cont TDef rest
-                                ("zero",rest) -> cont TZero rest
-                                ("one",rest) -> cont TOne rest
-                                ("give",rest) -> cont TGive rest
-                                ("at",rest) -> cont TAt rest
-                                ("scale",rest) -> cont TScale rest
-                                ("and",rest) -> cont TAnd rest
-                                ("or",rest) -> cont TOr rest
                                 ("print",rest) -> cont TPrint rest
-                                ("tir",rest) -> cont TTir rest
-                                ("yield",rest) -> cont TYield rest
-                                ("price",rest) -> cont TPrice rest
-                                ("zcb",rest) -> cont TZcb rest
-                                ("pay",rest) -> cont TPay rest
+                                ("dates",rest) -> cont TDates rest
+                                ("values",rest) -> cont TValues rest
+                                ("detail",rest) -> cont TDetail rest
+                                ("cashflow",rest) -> cont TCashflow rest
+                                ("portcashflow",rest) -> cont TPortCashflow rest
+                                ("suppose",rest) -> cont TSuppose rest
+                                ("BCUSD",rest) -> cont TBcraUsd rest
+                                ("BCCER",rest) -> cont TBcraCer rest
+                                ("TODAY",rest) -> cont TToday rest
+                                ("MARKET",rest) -> cont TMarket rest
+                                ("DATE",rest) -> cont TDate rest
+                                ("QUANTITY",rest) -> cont TQuantity rest
+                                ("zero",rest) -> cont TZero rest
+                                ("at",rest) -> cont TAt rest
                                 ("repeat",rest) -> cont TRepeat rest
+                                ("rent",rest) -> cont TRent rest
+                                ("amort",rest) -> cont TAmort rest
+                                ("interest",rest) -> cont TInterest rest
+                                ("of",rest) -> cont TOf rest
+                                ("scale",rest) -> cont TScale rest
                                 ("CER",rest) -> cont TCer rest
-                                ("DL",rest) -> cont TDL rest
-                                ("USD",rest) -> cont (TCurrency USD) rest
-                                ("ARS",rest) -> cont (TCurrency ARS) rest
-                                ("BTC",rest) -> cont (TCurrency BTC) rest
-                                ("ETH",rest) -> cont (TCurrency ETH) rest
+                                ("DL",rest) -> cont TDl rest
                                 ("ANNUAL",rest) -> cont (TFreq Annual) rest
                                 ("SEMIANNUAL",rest) -> cont (TFreq SemiAnnual) rest
                                 ("QUARTERLY",rest) -> cont (TFreq Quarterly) rest
@@ -187,10 +260,13 @@ lexer cont s = case s of
                                 (var,rest)   -> cont (TVar var) rest 
                         lexNum cs = let (num,rest) = span isDigit cs 
                                 in case rest of
-                                        ('.':cs) -> let (num',rest') = span isDigit cs
-                                                in cont (TDouble (read (num ++ "." ++ num'))) rest'
+                                        ('.':cs) -> case span isDigit cs of
+                                                (num','%':rest') -> cont (TPercent (read (num ++ "." ++ num'))) rest'
+                                                (num',rest') -> cont (TDouble (read (num ++ "." ++ num'))) rest'
                                         _ -> cont (TInt (read num)) rest
-                                           
+                        lexCurrency cs = let (curr,rest) = span isAlphaNum cs 
+                                in cont (TCurrency curr) rest
+
 defs_parse s = parseDefs s 1
 def_or_exp_parse s = parseDefOrExp s 1
 }

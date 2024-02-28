@@ -1,95 +1,85 @@
 module Sugar where
 
-import           System.Console.Haskeline
-
 import Data.Time.Calendar (Day, addGregorianMonthsClip)
 import Prelude hiding (and, repeat)
 
-import Common
+import Bond
+import MonadBnd
 
-zcb :: Scaler -> Currency -> Day -> Contract
-zcb s c d = at d (scale s (one c))
+data Frequency = Annual | SemiAnnual | Quarterly | Monthly
+    deriving (Eq, Show)
 
-pay :: Scaler -> Currency -> Contract
-pay s c = scale s (one c)
+data Cond = BCCER Double | BCUSD Double | Date Day | Market Money | Quantity Int | Today               -- Market seria current value, date el dia que queremos sup, bccer cer acutal y BCUSD tipocambio actual
+    deriving Show
 
-repeat :: Int -> Frequency -> Day -> Contract -> Contract
-repeat 1 _ d c = at d c
-repeat n f d c = at d c `and` repeat (n-1) f (nextDate f d) c
+data DefOrExp = Def Var SugarBond | Eval Exp | Portfolio Var [(Int, Var)]
+    deriving Show
 
-nextDate :: Frequency -> Day -> Day
-nextDate Annual d = addGregorianMonthsClip 12 d
-nextDate SemiAnnual d = addGregorianMonthsClip 6 d
-nextDate Quarterly d = addGregorianMonthsClip 3 d
-nextDate Monthly d = addGregorianMonthsClip 1 d
+data Exp =
+    Print [Cond] SugarBond
+    | Dates [Cond] SugarBond
+    | Values [Cond] SugarBond
+    | Detail [Cond] SugarBond
+    | Cashflow [Cond] SugarBond
+    | PortCashflow [Cond] Var
+    deriving Show
 
+type Iterator = (Int, Frequency, Day)
 
--- argyBond :: Currency -> Day -> Int -> Frequency -> Yield -> Double -> Contract
+data SugarBond =
+    SVar Var
+    | SAnd SugarBond SugarBond
+    | SScale Scaler SugarBond
+    | SAt Day Payment
+    | SRepeat Iterator Payment
+    | SCoupon Iterator Double Double Money
+    deriving Show
 
--- loopZcb :: 
--- loopZcb 
+repeat :: Int -> Frequency -> Day -> Payment -> Bond
+repeat 1 _ d p = at d p
+repeat n f d p = at d p `and` repeat (n-1) f (calcDate f 1 d) p
 
--- many para hacer que dado una cantidad haga todos los ands. aunque no se si tiene mucho sentido por las fechas. por ahi darle una periodicidad a fechas.
+calcDate :: Frequency -> Int -> Day -> Day
+calcDate Annual i d = addGregorianMonthsClip (toInteger $ 12 * i) d
+calcDate SemiAnnual i d = addGregorianMonthsClip (toInteger $ 6 * i) d
+calcDate Quarterly i d = addGregorianMonthsClip (toInteger $ 3 * i) d
+calcDate Monthly i d = addGregorianMonthsClip (toInteger $ 1 * i) d
 
-findContract :: Env -> Var -> Maybe Contract
-findContract [] _ = Nothing
-findContract ((v,c):xs) v' = if v == v' then Just c else findContract xs v'
+getRate :: Frequency -> Double -> Double
+getRate Annual r = r
+getRate SemiAnnual r = r / 2
+getRate Quarterly r = r / 4
+getRate Monthly r = r / 12
 
-convert :: Env -> SugarContract -> InputT IO (Maybe Contract)
-convert env (SVar v) = case findContract env v of
-    Just c -> return $ Just c
-    Nothing -> return $ Nothing
-convert _ SZero = return $ Just Zero
-convert _ (SOne c) = return $ Just (One c)
-convert env (SAnd c1 c2) = do
-    c1' <- convert env c1
-    case c1' of
-        Just c1'' -> do
-            c2' <- convert env c2
-            case c2' of
-                Just c2'' -> return $ Just (And c1'' c2'')
-                Nothing -> return $ Nothing
-        Nothing -> return $ Nothing
-convert env (SOr c1 c2) = do
-    c1' <- convert env c1
-    case c1' of
-        Just c1'' -> do
-            c2' <- convert env c2
-            case c2' of
-                Just c2'' -> return $ Just (Or c1'' c2'')
-                Nothing -> return $ Nothing
-        Nothing -> return $ Nothing
-convert env (SGive c) = do
-    c' <- convert env c
-    case c' of
-        Just c'' -> return $ Just (Give c'')
-        Nothing -> return $ Nothing
-convert env (SScale s c) = do
-    c' <- convert env c
-    case c' of
-        Just c'' -> return $ Just (Scale s c'')
-        Nothing -> return $ Nothing
-convert env (SAt d c) = do 
-    c' <- convert env c
-    case c' of
-        Just c'' -> return $ Just (At d c'')
-        Nothing -> return $ Nothing
-convert _ (SZcb s c d) = return $ Just (zcb s c d)
-convert _ (SPay s c) = return $ Just (pay s c)
-convert env (SRepeat n f d c) = do
-    c' <- convert env c
-    case c' of
-        Just c'' -> return $ Just (repeat n f d c'')
-        Nothing -> return $ Nothing
+couponBullet :: Int -> Frequency -> Day -> Double -> Double -> Currency -> Bond
+couponBullet n f d r b c = let rent = (getRate f r / 100 * b) 
+                            in repeat (n - 1) f d (pay rent 0 c) `and` at (calcDate f (n - 1) d) (pay rent b c)
 
-replaceScaler :: Contract -> Scaler -> Double -> Contract
-replaceScaler Zero _ _ = Zero
-replaceScaler (One c) _ _ = One c
-replaceScaler (Give c) s a = Give (replaceScaler c s a)
-replaceScaler (And c1 c2) s a = And (replaceScaler c1 s a) (replaceScaler c2 s a)
-replaceScaler (Or c1 c2) s a = Or (replaceScaler c1 s a) (replaceScaler c2 s a)
-replaceScaler (Scale s' c) s a | s' == s = Scale (Mult a) (replaceScaler c s a)
-                               | otherwise = Scale s' (replaceScaler c s a)
-replaceScaler (At d c) s a = At d (replaceScaler c s a)
+couponAmort :: Int -> Frequency -> Day -> Double -> Double -> Double -> Currency -> Bond
+couponAmort 1 f d r a b c = let rent = (getRate f r / 100 * b) 
+                            in at d (pay rent a c)
+couponAmort n f d r a b c = let rent = (getRate f r / 100 * b) 
+                            in at d (pay rent a c) `and` couponAmort (n - 1) f (calcDate f 1 d) r a (b - a) c
 
--- supose DL 10.0 
+convert :: MonadBnd m => SugarBond -> m (Maybe Bond)
+convert (SVar v) = lookupDef v
+convert (SAnd b1 b2) = do
+    b1' <- convert b1
+    case b1' of
+        Just b1'' -> do
+            b2' <- convert b2
+            case b2' of
+                Just b2'' -> return $ Just (and b1'' b2'')
+                Nothing -> return Nothing
+        Nothing -> return Nothing
+convert (SScale s b) = do
+    b' <- convert b
+    case b' of
+        Just b'' -> return $ Just (scale s b'')
+        Nothing -> return Nothing
+convert (SAt d p) = return $ Just (at d p)
+convert (SRepeat (0, _, _) _) = return Nothing
+convert (SRepeat (n, f, d) p) = return $ Just (repeat n f d p)
+convert (SCoupon (0, _, _) _ _ _) = return Nothing
+convert (SCoupon (n, f, d) r 0 (b, c)) = return $ Just (couponBullet n f d r b c)
+convert (SCoupon (n, f, d) r a (b, c)) = return $ Just (couponAmort n f d r a b c)

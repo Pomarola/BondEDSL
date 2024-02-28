@@ -25,9 +25,13 @@ source-repository head
 
 library
   exposed-modules:
-      Common
+      Bond
+      Errors
       Eval
+      MonadBnd
       Parse
+      PrettyPrinter
+      State
       Sugar
   other-modules:
       Paths_FinanceDSL
@@ -35,11 +39,20 @@ library
       Paths_FinanceDSL
   hs-source-dirs:
       src
+  default-extensions:
+      GADTs
+      StandaloneDeriving
+      PatternSynonyms
+      FlexibleInstances
+      FlexibleContexts
+      TupleSections
+      MultiWayIf
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       QuickCheck
     , array
     , base >=4.7 && <5
+    , boxes
     , containers
     , exceptions
     , extra
@@ -59,6 +72,14 @@ executable FinanceDSL-exe
       Paths_FinanceDSL
   hs-source-dirs:
       app
+  default-extensions:
+      GADTs
+      StandaloneDeriving
+      PatternSynonyms
+      FlexibleInstances
+      FlexibleContexts
+      TupleSections
+      MultiWayIf
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-tools:
       happy
@@ -67,6 +88,7 @@ executable FinanceDSL-exe
     , QuickCheck
     , array
     , base >=4.7 && <5
+    , boxes
     , containers
     , exceptions
     , extra
@@ -87,12 +109,21 @@ test-suite FinanceDSL-test
       Paths_FinanceDSL
   hs-source-dirs:
       test
+  default-extensions:
+      GADTs
+      StandaloneDeriving
+      PatternSynonyms
+      FlexibleInstances
+      FlexibleContexts
+      TupleSections
+      MultiWayIf
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       FinanceDSL
     , QuickCheck
     , array
     , base >=4.7 && <5
+    , boxes
     , containers
     , exceptions
     , extra

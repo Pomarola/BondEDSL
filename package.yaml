@@ -32,6 +32,7 @@ dependencies:
 - extra
 - text
 - time
+- boxes
 
 ghc-options:
 - -Wall
@@ -43,6 +44,15 @@ ghc-options:
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints
+
+default-extensions:
+- GADTs
+- StandaloneDeriving
+- PatternSynonyms
+- FlexibleInstances
+- FlexibleContexts
+- TupleSections
+- MultiWayIf
 
 library:
   source-dirs: src
