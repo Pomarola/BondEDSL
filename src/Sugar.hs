@@ -39,28 +39,33 @@ repeat :: Int -> Frequency -> Day -> Payment -> Bond
 repeat 1 _ d p = at d p
 repeat n f d p = at d p `and` repeat (n-1) f (calcDate f 1 d) p
 
+-- Calcular siguiente fecha segun frecuencia y una cantidad de skips
 calcDate :: Frequency -> Int -> Day -> Day
 calcDate Annual i d = addGregorianMonthsClip (toInteger $ 12 * i) d
 calcDate SemiAnnual i d = addGregorianMonthsClip (toInteger $ 6 * i) d
 calcDate Quarterly i d = addGregorianMonthsClip (toInteger $ 3 * i) d
 calcDate Monthly i d = addGregorianMonthsClip (toInteger $ 1 * i) d
 
+-- Calcular tasa segun frecuencia
 getRate :: Frequency -> Double -> Double
 getRate Annual r = r
 getRate SemiAnnual r = r / 2
 getRate Quarterly r = r / 4
 getRate Monthly r = r / 12
 
+-- Bono bullet a bono base
 couponBullet :: Int -> Frequency -> Day -> Double -> Double -> Currency -> Bond
 couponBullet n f d r b c = let rent = (getRate f r / 100 * b) 
                             in repeat (n - 1) f d (pay rent 0 c) `and` at (calcDate f (n - 1) d) (pay rent b c)
 
+-- Bono amortization a bono base
 couponAmort :: Int -> Frequency -> Day -> Double -> Double -> Double -> Currency -> Bond
 couponAmort 1 f d r a b c = let rent = (getRate f r / 100 * b) 
                             in at d (pay rent a c)
 couponAmort n f d r a b c = let rent = (getRate f r / 100 * b) 
                             in at d (pay rent a c) `and` couponAmort (n - 1) f (calcDate f 1 d) r a (b - a) c
 
+-- Convertir un SugarBond a un Bond base
 convert :: MonadBnd m => SugarBond -> m (Maybe Bond)
 convert (SVar v) = lookupDef v
 convert (SAnd b1 b2) = do

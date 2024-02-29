@@ -169,4 +169,4 @@ handleDefOrExp (Eval exp) = do
   b <- eval exp
   setDate oldDate
   unsetPrice
-  if b then return () else failBnd "No se pudo evaluar la expresion."
+  if b then return () else failBnd "La evaluacion de la expresion fallo."

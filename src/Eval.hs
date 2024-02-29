@@ -9,6 +9,8 @@ import PrettyPrinter
 import State
 
 eval :: MonadBnd m => Exp -> m Bool
+
+-- Evalua un bono y muestra el flujo de fondos
 eval (Cashflow conds bond) = do
     case bond of
         SVar name -> printBnd ("Cashflow for Bond " ++ name) 
@@ -22,18 +24,23 @@ eval (Cashflow conds bond) = do
             return True
         Nothing -> return False
 
+-- Evalua un portafolio y muestra el flujo de fondos de cada bono que lo compone
 eval (PortCashflow conds var) = do
     printBnd $ "Cashflow for portfolio " ++ var
     p <- lookupPortfolio var
     case p of
         Just ps -> do
             ps' <- evalPort conds ps
-            from <- getDate
-            let cfs = sortByDay $ filterFrom from $ concatMap (\(v,b) -> bondAsList (Just v) b) ps'
-            printPortfolioCashFlow cfs
-            return True
+            case ps' of
+                [] -> return False
+                _ -> do
+                        from <- getDate
+                        let cfs = sortByDay $ filterFrom from $ concatMap (\(v,b) -> bondAsList (Just v) b) ps'
+                        printPortfolioCashFlow cfs
+                        return True
         Nothing -> return False
 
+-- Evalua un bono y muestra el detalle completo (fechas y valores relevantes)
 eval (Detail conds bond) = do
     case bond of
         SVar name -> printBnd ("Full Detail for Bond " ++ name) 
@@ -47,6 +54,7 @@ eval (Detail conds bond) = do
             return True
         Nothing -> return False
 
+-- Evalua un bono y muestra las fechas relevantes
 eval (Dates conds bond) = do
     case bond of
         SVar name -> printBnd ("Dates for Bond " ++ name) 
@@ -58,7 +66,8 @@ eval (Dates conds bond) = do
             printBondDates dates
             return True
         Nothing -> return False
-
+    
+-- Evalua un bono y muestra los valores teoricos
 eval (Values conds bond) = do
     case bond of
         SVar name -> printBnd ("Values for Bond " ++ name) 
@@ -71,6 +80,7 @@ eval (Values conds bond) = do
             return True
         Nothing -> return False
 
+-- Evalua un bono y muestra las tuplas que lo conforman
 eval (Print conds bond) = do
     case bond of
         SVar name -> printBnd ("Tuples for Bond " ++ name) 
@@ -85,6 +95,7 @@ eval (Print conds bond) = do
 sortedBond :: Bond -> [BondAsTuple]
 sortedBond b = sortByDay $ bondAsList Nothing b
 
+-- Obtiene las fechas relevantes de un bono
 getBondDates :: MonadBnd m => [BondAsTuple] -> m (Day, Maybe Day, Maybe Day, Maybe Day, Int, Int)
 getBondDates b = do
     d <- getDate
@@ -99,6 +110,7 @@ getBondDates b = do
     let remainingPayments = length after
     return (d, maturityDate, prevDate, nextDate, daysToNext, remainingPayments)
 
+-- Obtiene los valores relevantes de un bono
 getBondValues :: MonadBnd m => [BondAsTuple] -> m (Maybe Money, [Money], [Money], Maybe Money, [Money], Maybe Double)
 getBondValues b = do
     p <- getPrice
@@ -124,6 +136,7 @@ findMatchingCurrency :: Currency -> [Money] -> Maybe Money
 findMatchingCurrency _ [] = Nothing
 findMatchingCurrency c ((v, c'):vs) = if c == c' then Just (v, c) else findMatchingCurrency c vs
 
+-- Obtiene el interes acumulado entre dos fechas (intereses corridos)
 getInterest :: Money -> Day -> Maybe Day -> Maybe Day -> Maybe Money
 getInterest (r,c) d (Just pd) (Just nd) = Just (r * (fromIntegral (diffDays d pd) / fromIntegral (diffDays nd pd)), c)
 getInterest _ _ _ _ = Nothing
@@ -140,6 +153,7 @@ addToAccum :: Money -> [Money] -> [Money]
 addToAccum (a1, c1) [] = [(a1, c1)]
 addToAccum (a1, c1) ((a2, c2):as) = if c1 == c2 then (a1 + a2, c1) : as else (a2, c2) : addToAccum (a1, c1) as
 
+-- Evalua un portafolio aplicando las condiciones supuestas y la cantidad a cada bono que lo compone
 evalPort :: MonadBnd m => [Cond] -> [(Int, Var)] -> m [(Var, Bond)]
 evalPort _ [] = return []
 evalPort conds ((n, v):ps) = do
@@ -149,8 +163,11 @@ evalPort conds ((n, v):ps) = do
             bs <- evalPort conds ps
             bc <- applyConds conds b'
             return ((v, applyScalers (fromIntegral n) bc) : bs)
-        Nothing -> return []
+        Nothing -> do
+            printBnd ("No se encontro " ++ v ++ " en el entorno.")
+            return []
 
+-- Convierte un SugarBond a un Bond y aplica las condiciones supuestas
 convertCond :: MonadBnd m => [Cond] -> SugarBond -> m (Maybe Bond)
 convertCond conds sb = do
     b <- convert sb
@@ -160,6 +177,7 @@ convertCond conds sb = do
             return $ Just (evalScalers cb)
         Nothing -> return Nothing
 
+-- Aplica las condiciones a un bono
 applyConds :: MonadBnd m => [Cond] -> Bond -> m Bond
 applyConds [] b = return b
 applyConds ((BCCER cer):cs) b = let b' = replaceScaler (CER cer) b in applyConds cs b'
@@ -179,6 +197,7 @@ applyConds (Today:cs) b = do
 evalScalers :: Bond -> Bond
 evalScalers = applyScalers 1
 
+-- Aplica los escaladores que sean simples multiplicadores a un bono
 applyScalers :: Double -> Bond -> Bond
 applyScalers m (Scale (Mult s) b) = applyScalers (m * s) b
 applyScalers m (Scale s@(CER _) b) = Scale s (applyScalers m b)
@@ -187,6 +206,7 @@ applyScalers m (And b1 b2) = And (applyScalers m b1) (applyScalers m b2)
 applyScalers _ b@(At _ PZero) = b
 applyScalers m (At d (Pay r a c)) = At d (Pay (r * m) (a * m) c)
 
+-- Utilizado para aplicar los condicionadores supuestos a los escaladores de un bono que esten ligados a una medida
 replaceScaler :: Scaler -> Bond -> Bond
 replaceScaler n@(CER new) (Scale (CER old) b) = Scale (Mult (new / old)) (replaceScaler n b)
 replaceScaler n@(DolarLinked new) (Scale (DolarLinked old) b) = Scale (Mult (new / old)) (replaceScaler n b)
