@@ -9,10 +9,10 @@ type Port = (Var, [(Int, Var)])
 
 data State = State
   {
-    env :: [Def], -- Entorno con variables globales y su valor
-    currentPrice :: Maybe Money,
-    currentDate :: Day,
-    porfolios :: [Port]
+    env :: [Def],                   -- Entorno de Bonos
+    currentPrice :: Maybe Money,    -- Precio de mercado supuesto
+    currentDate :: Day,             -- Fecha supuesta
+    porfolios :: [Port]             -- Entorno de Portfolios
   }
 
 todayDate :: IO Day

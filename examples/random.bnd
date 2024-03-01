@@ -1,0 +1,27 @@
+def cer = scale CER 20.0 repeat 5 MONTHLY 5/2/2020 rent 10.0 amort 20.0 $ARS 
+def dl = scale DL 50.0 repeat 3 QUARTERLY 1/1/2020 rent 50.0 amort 100.0 $ARS 
+def bullet = repeat 8 SEMIANNUAL 6/10/2020 interest 2.0% of 100.0 $USD
+def amortbond = repeat 10 ANNUAL 5/5/2021 interest 5.0% amort 10.0% of 1.0 of 1.0 $BTC
+def flat = repeat 4 SEMIANNUAL 6/10/2020 rent 5.0% of 10.0 $EUR
+def z = at 10/10/2024 zero
+def rand = at 10/12/2011 rent 10.0 $ARS & at 10/12/2010 zero & at 10/12/2012 amort 20.0 $USD & at 10/12/2009 rent 15.0 amort 25.0 $ARS & at 10/12/2019 rent 15.0 amort 25.0 $USD
+
+def dual = cer & dl
+
+def bullet100 = scale 100.0 bullet
+
+def dualscale = scale DL 100.0 scale CER 20.0 repeat 5 ANNUAL 5/2/2020 rent 10.0 amort 20.0 $ARS 
+
+portfolio myPort = [100 dual, 5 dualscale, 2 bullet100, 50 rand]
+
+def ae38p1 = at 9/7/2021 rent 0.125% of 1.0 $USD
+def ae38p2 = repeat 2 SEMIANNUAL 9/1/2022 rent 1.0% of 1.0 $USD
+def ae38p3 = repeat 2 SEMIANNUAL 9/1/2023 rent 1.9375% of 1.0 $USD
+def ae38p4 = repeat 2 SEMIANNUAL 9/1/2024 rent 2.125% of 1.0 $USD
+def ae38p5 = repeat 5 SEMIANNUAL 9/1/2025 rent 2.5% of 1.0 $USD
+def ae38p6 = repeat 22 SEMIANNUAL 9/7/2027 interest 5.0% amort 0.0454545 of 1.0 $USD
+
+def ae38 = ae38p1 & ae38p2 & ae38p3 & ae38p4 & ae38p5 & ae38p6
+
+portfolio myPortFail = [5 notInEnv]
+portfolio myPortHalfFail = [500 ae38, 500 notInEnv]

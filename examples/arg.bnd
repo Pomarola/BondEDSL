@@ -1,0 +1,18 @@
+def al30p1 = at 9/7/2021 rent 0.125% of 1.0 $USD
+def al30p2 = repeat 4 SEMIANNUAL 9/1/2022 rent 0.25% of 1.0 $USD
+def al30p3 = at 9/1/2024 rent 0.375% of 1.0 $USD
+def al30p4 = repeat 1 SEMIANNUAL 9/7/2024 interest 0.75% amort 0.04 of 1.0 $USD
+def al30p5 = repeat 6 SEMIANNUAL 9/1/2025 interest 0.75% amort 0.08 of 0.96 $USD 
+def al30p6 = repeat 6 SEMIANNUAL 9/1/2028 interest 1.75% amort 0.08 of 0.48 $USD
+
+def al30 = al30p1 & al30p2 & al30p3 & al30p4 & al30p5 & al30p6
+
+def tv24 = scale DL 152.83 repeat 4 SEMIANNUAL 30/10/2022 interest 0.4% of 152.83 $ARS
+
+def tx26p1 = repeat 7 SEMIANNUAL 9/5/2021 rent 1.0% of 1.0 $ARS
+def tx26p2 = repeat 5 SEMIANNUAL 9/11/2024 interest 2.0% amort 20.0% of 1.0 of 1.0 $ARS
+
+def tx26 = scale CER 22.544 tx26p1 & tx26p2
+def tx261 = scale CER 22.7365 tx26p1 & tx26p2
+
+portfolio argy = [5 al30, 1 tv24, 3 tx26]
