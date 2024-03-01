@@ -88,7 +88,8 @@ eval (Print conds bond) = do
     b <- convertCond conds bond
     case b of
         Just b' -> do
-            printTuples $ sortedBond b'
+            from <- getDate
+            printTuples $ sortByDay $ filterFrom from $ bondAsList Nothing b'
             return True
         Nothing -> return False
 

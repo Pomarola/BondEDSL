@@ -1,4 +1,4 @@
-module Sugar where
+module Sugar (Frequency(..), Cond(..), DefOrExp(..), Exp(..), Iterator, SugarBond(..), convert) where
 
 import Data.Time.Calendar (Day, addGregorianMonthsClip)
 import Prelude hiding (and, repeat)

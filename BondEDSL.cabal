@@ -4,11 +4,11 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 
-name:           FinanceDSL
+name:           BondEDSL
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/pomarola/FinanceDSL#readme>
-homepage:       https://github.com/pomarola/FinanceDSL#readme
-bug-reports:    https://github.com/pomarola/FinanceDSL/issues
+description:    Please see the README on GitHub at <https://github.com/pomarola/BondEDSL#readme>
+homepage:       https://github.com/Pomarola/BondEDSL#readme
+bug-reports:    https://github.com/Pomarola/BondEDSL/issues
 author:         Lucas Poma
 maintainer:     example@example.com
 copyright:      2024 Lucas Poma
@@ -21,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/pomarola/FinanceDSL
+  location: https://github.com/Pomarola/BondEDSL
 
 library
   exposed-modules:
@@ -34,9 +34,9 @@ library
       State
       Sugar
   other-modules:
-      Paths_FinanceDSL
+      Paths_BondEDSL
   autogen-modules:
-      Paths_FinanceDSL
+      Paths_BondEDSL
   hs-source-dirs:
       src
   default-extensions:
@@ -67,9 +67,9 @@ library
 executable FinanceDSL-exe
   main-is: Main.hs
   other-modules:
-      Paths_FinanceDSL
+      Paths_BondEDSL
   autogen-modules:
-      Paths_FinanceDSL
+      Paths_BondEDSL
   hs-source-dirs:
       app
   default-extensions:
@@ -84,7 +84,7 @@ executable FinanceDSL-exe
   build-tools:
       happy
   build-depends:
-      FinanceDSL
+      BondEDSL
     , QuickCheck
     , array
     , base >=4.7 && <5
@@ -104,9 +104,9 @@ test-suite FinanceDSL-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_FinanceDSL
+      Paths_BondEDSL
   autogen-modules:
-      Paths_FinanceDSL
+      Paths_BondEDSL
   hs-source-dirs:
       test
   default-extensions:
@@ -119,7 +119,7 @@ test-suite FinanceDSL-test
       MultiWayIf
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      FinanceDSL
+      BondEDSL
     , QuickCheck
     , array
     , base >=4.7 && <5

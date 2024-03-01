@@ -1,4 +1,4 @@
-module Bond where
+module Bond (Var, Currency, Money, Scaler(..), Payment(..), Bond(..), and, scale, at, pay, BondAsTuple, bondAsList, sortByDay, filterFrom, filterTo, tupleDate) where
 
 import Prelude hiding (and)
 import Data.Time.Calendar (Day)
