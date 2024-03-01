@@ -9,5 +9,6 @@ Este software utiliza [**Stack**](https://docs.haskellstack.org/).
 Para ejecutarlo simplemente corremos y obtendremos un entorno interactivo:
 ```
 stack run
+```
 
 Hay un PDF llamado Informe que detalla su uso
