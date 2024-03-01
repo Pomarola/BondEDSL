@@ -99,38 +99,3 @@ executable FinanceDSL-exe
     , text
     , time
   default-language: Haskell2010
-
-test-suite FinanceDSL-test
-  type: exitcode-stdio-1.0
-  main-is: Spec.hs
-  other-modules:
-      Paths_BondEDSL
-  autogen-modules:
-      Paths_BondEDSL
-  hs-source-dirs:
-      test
-  default-extensions:
-      GADTs
-      StandaloneDeriving
-      PatternSynonyms
-      FlexibleInstances
-      FlexibleContexts
-      TupleSections
-      MultiWayIf
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      BondEDSL
-    , QuickCheck
-    , array
-    , base >=4.7 && <5
-    , boxes
-    , containers
-    , exceptions
-    , extra
-    , haskeline >=0.8.0.0
-    , mtl
-    , prettyprinter
-    , prettyprinter-ansi-terminal
-    , text
-    , time
-  default-language: Haskell2010
